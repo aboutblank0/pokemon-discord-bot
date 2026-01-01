@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using PokemonBot.Data;
 
 namespace pokemon_discord_bot
@@ -12,6 +13,8 @@ namespace pokemon_discord_bot
 
         public static async Task Main()
         {
+            ApiPokemonData.Init();
+
             // Apply migrations automatically 
             _db = new AppDbContext();
             await _db.Database.MigrateAsync();
@@ -26,7 +29,7 @@ namespace pokemon_discord_bot
             _client.MessageReceived += OnMessageReceived;
             _client.Ready += OnReady;
 
-            String? token = Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN");
+            string? token = Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN");
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
 
