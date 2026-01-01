@@ -1,14 +1,27 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
+using PokemonBot.Data;
 
 namespace pokemon_discord_bot
 {
     public class Program
     {
-        private static DiscordSocketClient? _client;
+        private static DiscordSocketClient _client = null!;
+        private static AppDbContext _db = null!;
+
         public static async Task Main()
         {
-            _client = new DiscordSocketClient();
+            // Apply migrations automatically 
+            _db = new AppDbContext();
+            await _db.Database.MigrateAsync();
+
+            var config = new DiscordSocketConfig
+            {
+                GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.MessageContent
+            };
+
+            _client = new DiscordSocketClient(config);
             _client.Log += Log;
             _client.MessageReceived += OnMessageReceived;
             _client.Ready += OnReady;
@@ -31,10 +44,9 @@ namespace pokemon_discord_bot
             return Task.CompletedTask;
         }
 
-        private static Task OnMessageReceived(SocketMessage msg)
+        private static async Task OnMessageReceived(SocketMessage msg)
         {
-            if (msg.Author.IsBot) return Task.CompletedTask;
-            return Task.CompletedTask;
+            if (msg.Author.IsBot) return;
         }
     }
 }
