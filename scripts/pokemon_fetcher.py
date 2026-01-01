@@ -1,11 +1,15 @@
 import aiohttp
 import asyncio
 import json
+from pathlib import Path
+
 from typing import Dict, Any
 
 BASE_URL = "https://pokeapi.co/api/v2"
 SPRITE_NAMES = ["front_default", "front_shiny", "front_female", "front_shiny_female"]
-CONCURRENT = 50  # Adjust based on politeness
+CONCURRENT = 50
+path = Path().resolve().parent
+file_path = path / "all_pokemons.json"
 
 async def fetch_pokemon(session: aiohttp.ClientSession, name_or_id: str) -> Dict[str, Any]:
     """Async fetch pokemon + species."""
@@ -34,13 +38,11 @@ async def fetch_pokemon(session: aiohttp.ClientSession, name_or_id: str) -> Dict
     return data
 
 async def fetch_all_pokemons() -> Dict[int, Dict[str, Any]]:
-    # Step 1: Get all names (1 fast call)
     async with aiohttp.ClientSession() as session:
         resp = await session.get(f"{BASE_URL}/pokemon?limit=2000")
         all_data = await resp.json()
         names = [p["name"] for p in all_data["results"]]
     
-    # Step 2: Concurrent fetch
     pokemons = {}
     semaphore = asyncio.Semaphore(CONCURRENT)
     
@@ -58,9 +60,8 @@ async def fetch_all_pokemons() -> Dict[int, Dict[str, Any]]:
     
     return pokemons
 
-# Run
 pokemons = asyncio.run(fetch_all_pokemons())
-with open("all_pokemons.json", "w") as f:
+with file_path.open("w") as f:
     json.dump(pokemons, f, indent=2)
 
 print(f"Fetched {len(pokemons)} Pokémon!")
