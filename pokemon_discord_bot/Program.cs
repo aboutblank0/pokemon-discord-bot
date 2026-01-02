@@ -51,15 +51,16 @@ namespace pokemon_discord_bot
             if (msg.Author.IsBot) return;
             if (msg.Content != "coninhas") return;
 
-            ApiPokemon randomPokemon = ApiPokemonData.Instance.GetRandomPokemon();
-            ApiPokemon randomPokemon2 = ApiPokemonData.Instance.GetRandomPokemon();
-            ApiPokemon randomPokemon3 = ApiPokemonData.Instance.GetRandomPokemon();
-            ApiPokemon randomPokemon4 = ApiPokemonData.Instance.GetRandomPokemon();
-            ApiPokemon randomPokemon5 = ApiPokemonData.Instance.GetRandomPokemon();
+            ApiPokemon[] randomPokemons = ApiPokemonData.Instance.GetRandomPokemon(3);
+            string[] randomPokemonsSprites = randomPokemons.Select(x => x.Sprites.FrontDefault).ToArray();
 
-            var bytes = await ImageEditor.CombineImagesAsync(new string[] { randomPokemon.Sprites.FrontShiny, randomPokemon2.Sprites.FrontShiny, randomPokemon3.Sprites.FrontShiny, randomPokemon4.Sprites.FrontDefault, randomPokemon5.Sprites.FrontDefault }, 2.0f);
+            var bytes = await ImageEditor.CombineImagesAsync(randomPokemonsSprites, 2.0f);
+            var fileName = "coninhas.png";
+            var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
 
-            await msg.Channel.SendFileAsync(new FileAttachment(new MemoryStream(bytes), "coninhas.jpg"));
+            var component = CardView.CreateDropView(fileName);
+            
+            await msg.Channel.SendFileAsync(fileAttachment, components: component);
         }
     }
 }

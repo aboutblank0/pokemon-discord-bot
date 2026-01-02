@@ -41,9 +41,16 @@ namespace pokemon_discord_bot
             instance.Pokemons = JsonSerializer.Deserialize<Dictionary<int, ApiPokemon>>(json)!;
         }
 
-        public ApiPokemon GetRandomPokemon()
+        public ApiPokemon[] GetRandomPokemon(uint quantity)
         {
-            return Pokemons.Values.ElementAt(new Random().Next(0, Pokemons.Count));
+            ApiPokemon[] pokemonList = new ApiPokemon[quantity];
+
+            for (int i = 0; i < pokemonList.Length; i++)
+            {
+                pokemonList[i] = Pokemons.Values.ElementAt(new Random().Next(0, Pokemons.Count));
+            }
+
+            return pokemonList; 
         }
     }
 
