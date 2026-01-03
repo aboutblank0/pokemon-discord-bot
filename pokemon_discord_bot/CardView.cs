@@ -6,7 +6,7 @@ namespace pokemon_discord_bot
 {
     public class CardView
     {
-        public static MessageComponent CreateDropView(String fileName, string user, uint size, ApiPokemon[] randomPokemons)
+        public static MessageComponent CreateDropView(String fileName, string user, ApiPokemon[] randomPokemons)
         {
             ButtonBuilder[] buttonList = new ButtonBuilder[randomPokemons.Length];
 

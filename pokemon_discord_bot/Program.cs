@@ -26,7 +26,6 @@ namespace pokemon_discord_bot
 
             _client = new DiscordSocketClient(config);
             _client.Log += Log;
-            _client.MessageReceived += OnMessageReceived;
             _client.Ready += OnReady;
 
             string? token = Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN");
@@ -49,23 +48,6 @@ namespace pokemon_discord_bot
         {
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
-        }
-
-        private static async Task OnMessageReceived(SocketMessage msg)
-        {
-            if (msg.Author.IsBot) return;
-            if (msg.Content != "coninhas") return;
-
-            ApiPokemon[] randomPokemons = ApiPokemonData.Instance.GetRandomPokemon(3);
-            string[] randomPokemonsSprites = randomPokemons.Select(x => x.Sprites.FrontDefault).ToArray();
-
-            var bytes = await ImageEditor.CombineImagesAsync(randomPokemonsSprites, 2.0f);
-            var fileName = "coninhas.png";
-            var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
-
-            var component = CardView.CreateDropView(fileName);
-            
-            await msg.Channel.SendFileAsync(fileAttachment, components: component);
         }
     }
 }

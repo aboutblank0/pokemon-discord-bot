@@ -15,16 +15,14 @@ namespace pokemon_discord_bot
         [Command("drop")]
         public async Task DropAsync()
         {
-            ApiPokemon[] randomPokemons = ApiPokemonData.Instance.GetRandomPokemon(3);
-            string[] randomPokemonsSprites = randomPokemons.Select(x => x.Sprites.FrontDefault).ToArray();
+            //var bytes = await ImageEditor.CombineImagesAsync(randomPokemonsSprites, 2.0f);
+            //var fileName = "coninhas.png";
+            //var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
+            //var component = CardView.CreateDropView(fileName, Context.User.Mention, apiPokemons.ToArray());
 
-            var bytes = await ImageEditor.CombineImagesAsync(randomPokemonsSprites, 2.0f);
-            var fileName = "coninhas.png";
-            var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
+            //await Context.Channel.SendFileAsync(fileAttachment, components: component);
 
-            var component = CardView.CreateDropView(fileName, Context.User.Mention, 3, randomPokemons);
-
-            await Context.Channel.SendFileAsync(fileAttachment, components: component);
+            await Context.Channel.SendMessageAsync("Cala-te conas");
         }
     }
 
