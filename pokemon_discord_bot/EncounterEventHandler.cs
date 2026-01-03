@@ -1,4 +1,5 @@
-﻿using pokemon_discord_bot.Data;
+﻿using Microsoft.Extensions.DependencyInjection;
+using pokemon_discord_bot.Data;
 using PokemonBot.Data;
 
 namespace pokemon_discord_bot
@@ -8,13 +9,13 @@ namespace pokemon_discord_bot
         private const uint DROP_COOLDOWN_SECONDS = 5;
         private const uint CLAIM_COOLDOWN_SECONDS = 5;
 
-        private AppDbContext _db = null!;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         private Dictionary<ulong, DateTimeOffset> _lastTriggerTime;
         private Dictionary<ulong, DateTimeOffset> _lastClaimTime;
 
-        public EncounterEventHandler() { 
-            _db = new AppDbContext();
+        public EncounterEventHandler(IServiceScopeFactory scopeFactory) {
+            _scopeFactory = scopeFactory;
 
             _lastTriggerTime = new Dictionary<ulong, DateTimeOffset>();
             _lastClaimTime = new Dictionary<ulong, DateTimeOffset>();
@@ -29,19 +30,21 @@ namespace pokemon_discord_bot
             encounterEvent.Biome = BiomeType.FOREST;
             encounterEvent.TriggeredBy = (long) userId;
 
-
             //Below line needs an EncounterEvent in the DB present
-            List<Pokemon> pokemons = await CreateRandomPokemons(pokemonAmount, encounterEvent);
-            await _db.SaveChangesAsync();
+            using var scope = _scopeFactory.CreateScope();
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            List<Pokemon> pokemons = await CreateRandomPokemons(pokemonAmount, encounterEvent, db);
+            await db.SaveChangesAsync();
+
+            _lastTriggerTime[userId] = DateTimeOffset.UtcNow;
 
             EncounterEventWithPokemon encounterEventWithPokemon = new EncounterEventWithPokemon();
             encounterEventWithPokemon.EncounterEvent = encounterEvent;
             encounterEventWithPokemon.Pokemons = pokemons;
-
             return encounterEventWithPokemon;
         }
 
-        private async Task<List<Pokemon>> CreateRandomPokemons(int pokemonAmount, EncounterEvent encounterEvent )
+        private async Task<List<Pokemon>> CreateRandomPokemons(int pokemonAmount, EncounterEvent encounterEvent, AppDbContext db)
         {
             ApiPokemon[] randomPokemons = ApiPokemonData.Instance.GetRandomPokemon(3);
             List<Pokemon> pokemons = new List<Pokemon>();
@@ -69,7 +72,7 @@ namespace pokemon_discord_bot
                 pokemons.Add(pokemon);
             }
 
-            await _db.Pokemon.AddRangeAsync(pokemons);
+            await db.Pokemon.AddRangeAsync(pokemons);
             return pokemons;
         }
 

@@ -1,28 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
 
 namespace pokemon_discord_bot
 {
-    using Discord;
-    using Discord.Commands;
-    using Discord.WebSocket;
-
     public class InfoModule : ModuleBase<SocketCommandContext>
     {
+        private readonly EncounterEventHandler _encounterEventHandler;
+
+        public InfoModule(EncounterEventHandler encounterEventHandler)
+        {
+            _encounterEventHandler = encounterEventHandler;
+        }
+
         [Command("drop")]
         public async Task DropAsync()
         {
-            //var bytes = await ImageEditor.CombineImagesAsync(randomPokemonsSprites, 2.0f);
-            //var fileName = "coninhas.png";
-            //var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
-            //var component = CardView.CreateDropView(fileName, Context.User.Mention, apiPokemons.ToArray());
+            var user = Context.User;
+            if (!_encounterEventHandler.CanUserTriggerEncounter(user.Id))
+            {
+                await Context.Channel.SendMessageAsync($"{user.Mention} ACALMA-TE CARALHO");
+                return;
+            }
 
-            //await Context.Channel.SendFileAsync(fileAttachment, components: component);
+            var encounter = await _encounterEventHandler.CreateRandomEncounterEvent(3, user.Id);
+            List<ApiPokemon> apiPokemons = new List<ApiPokemon>();
 
-            await Context.Channel.SendMessageAsync("Cala-te conas");
+            foreach(var pokemon in encounter.Pokemons)
+            {
+                apiPokemons.Add(ApiPokemonData.Instance.GetPokemon(pokemon.ApiPokemonId));
+            }
+
+            var pokemonSprites = apiPokemons.Select(p => p.Sprites.FrontDefault).ToArray(); //TODO: Pick the correct sprite depending on gender/ isShiny etc
+
+            var bytes = await ImageEditor.CombineImagesAsync(pokemonSprites, 2.0f);
+            var fileName = "coninhas.png";
+            var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
+            var component = CardView.CreateDropView(fileName, Context.User.Mention, apiPokemons.ToArray());
+
+            await Context.Channel.SendFileAsync(fileAttachment, components: component);
         }
     }
 
