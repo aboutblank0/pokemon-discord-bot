@@ -27,6 +27,7 @@ async def fetch_pokemon(session: aiohttp.ClientSession, name_or_id: str) -> Dict
         "id": pokemon["id"],
         "types": [t["type"]["name"] for t in pokemon["types"]],
         "sprites": {k: v for k, v in pokemon["sprites"].items() if k in SPRITE_NAMES},
+        "gender_rate": species["gender_rate"],
         "weight": 100
     }
     
@@ -34,6 +35,7 @@ async def fetch_pokemon(session: aiohttp.ClientSession, name_or_id: str) -> Dict
         data["weight"] = 1
     elif species["is_legendary"]:
         data["weight"] = 10
+    
     
     return data
 

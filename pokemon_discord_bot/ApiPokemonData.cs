@@ -59,6 +59,7 @@ namespace pokemon_discord_bot
         [JsonPropertyName("types")] public List<string> Types { get; set; }
         [JsonPropertyName("sprites")] public Sprites Sprites { get; set; }
         [JsonPropertyName("weight")] public uint Weight { get; set; }
+        [JsonPropertyName("gender_rate")] public sbyte GenderRate { get; set; }
     }
     public class Sprites
     {
