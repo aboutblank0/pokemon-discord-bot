@@ -29,5 +29,7 @@ namespace pokemon_discord_bot.Data
 
         [Column("biome")]
         public BiomeType? Biome { get; set; }
+
+        public List<Pokemon> Pokemons { get; set; } = null!;
     }
 }

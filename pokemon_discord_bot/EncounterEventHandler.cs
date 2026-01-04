@@ -8,6 +8,9 @@ namespace pokemon_discord_bot
     {
         private const uint DROP_COOLDOWN_SECONDS = 5;
         private const uint CLAIM_COOLDOWN_SECONDS = 5;
+        private const double SHINY_CHANCE = 1d/10d;
+        private const int MIN_POKEMON_SIZE = 1;
+        private const int MAX_POKEMON_SIZE = 5;
 
         private readonly IServiceScopeFactory _scopeFactory;
 
@@ -21,7 +24,7 @@ namespace pokemon_discord_bot
             _lastClaimTime = new Dictionary<ulong, DateTimeOffset>();
         }
 
-        public async Task<EncounterEventWithPokemon> CreateRandomEncounterEvent(int pokemonAmount, ulong userId)
+        public async Task<EncounterEvent> CreateRandomEncounterEvent(int pokemonAmount, ulong userId)
         {
             if (!CanUserTriggerEncounter(userId)) 
                 throw new Exception("Tried to create random encounter event when user is on cooldown. Should always call CanUserTriggerEncounter first");
@@ -38,10 +41,8 @@ namespace pokemon_discord_bot
 
             _lastTriggerTime[userId] = DateTimeOffset.UtcNow;
 
-            EncounterEventWithPokemon encounterEventWithPokemon = new EncounterEventWithPokemon();
-            encounterEventWithPokemon.EncounterEvent = encounterEvent;
-            encounterEventWithPokemon.Pokemons = pokemons;
-            return encounterEventWithPokemon;
+            encounterEvent.Pokemons = pokemons;
+            return encounterEvent;
         }
 
         private async Task<List<Pokemon>> CreateRandomPokemons(int pokemonAmount, EncounterEvent encounterEvent, AppDbContext db)
@@ -51,13 +52,14 @@ namespace pokemon_discord_bot
 
             foreach (ApiPokemon apiPokemon in randomPokemons)
             {
+                Random random = new Random();
+
                 Pokemon pokemon = new Pokemon();
                 pokemon.ApiPokemonId = (int) apiPokemon.Id;
                 pokemon.EncounterEvent = encounterEvent;
-                pokemon.IsShiny = false;             //TODO: SHOULD BE RANDOMLY SHINY/NOT SHINY DEPENDING ON SOME CHANCE
-                pokemon.Gender = PokemonGender.MALE; //TODO: SHOULD BE RANDOMLY MALE/FEMALE/GENDERLESS (depending on whicih pokemon)
-
-                Random random = new Random();
+                pokemon.IsShiny = Math.Round(random.NextDouble(), 5) < SHINY_CHANCE;
+                var values = Enum.GetValues<PokemonGender>();
+                pokemon.Gender = (PokemonGender)values.GetValue(random.Next(values.Length)); //TODO: SHOULD BE RANDOMLY MALE/FEMALE/GENDERLESS (depending on whicih pokemon)
                 pokemon.PokemonStats = new PokemonStats()
                 {
                     IvAtk = (short)(random.NextInt64(0, 31) + 1),
@@ -66,7 +68,7 @@ namespace pokemon_discord_bot
                     IvSpAtk = (short)(random.NextInt64(0, 31) + 1),
                     IvSpDef = (short)(random.NextInt64(0, 31) + 1),
                     IvSpeed = (short)(random.NextInt64(0, 31) + 1),
-                    Size = 1.0f //TODO: SHOULD BE RANDOMLY GENERATED
+                    Size = (float)(MIN_POKEMON_SIZE + (Math.Round(random.NextDouble(), 2) * (MAX_POKEMON_SIZE - MIN_POKEMON_SIZE)))
                 };
 
                 pokemons.Add(pokemon);
@@ -85,11 +87,5 @@ namespace pokemon_discord_bot
             var elapsed = DateTimeOffset.UtcNow - lastTrigger;
             return elapsed.TotalSeconds > DROP_COOLDOWN_SECONDS;
         }
-    }
-
-    public class EncounterEventWithPokemon
-    {
-        public EncounterEvent EncounterEvent { get; set; }
-        public List<Pokemon> Pokemons { get; set; }
     }
 }

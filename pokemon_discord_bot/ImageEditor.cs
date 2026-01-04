@@ -8,12 +8,12 @@ namespace pokemon_discord_bot
     public class ImageEditor
     {
 
-        public static async Task<byte[]> CombineImagesAsync(string[] imageUrls, float scaleFactor = 1.0f)
+        public static async Task<byte[]> CombineImagesAsync(List<string> imageUrls, float scaleFactor = 1.0f)
         {
-            if (imageUrls == null || imageUrls.Length == 0)
+            if (imageUrls == null || imageUrls.Count == 0)
                 return Array.Empty<byte>();
 
-            if (imageUrls.Length > 10)
+            if (imageUrls.Count > 10)
                 throw new ArgumentException("Maximum of 10 images allowed.");
 
             if (scaleFactor <= 0)
@@ -23,9 +23,9 @@ namespace pokemon_discord_bot
             {
                 // Download the images asynchronously
                 using var httpClient = new HttpClient();
-                Bitmap[] bitmaps = new Bitmap[imageUrls.Length];
+                Bitmap[] bitmaps = new Bitmap[imageUrls.Count];
 
-                for (int i = 0; i < imageUrls.Length; i++)
+                for (int i = 0; i < imageUrls.Count; i++)
                 {
                     byte[] imageBytes = await httpClient.GetByteArrayAsync(imageUrls[i]);
                     await using var inputStream = new MemoryStream(imageBytes);

@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace pokemon_discord_bot.Data
@@ -53,5 +52,26 @@ namespace pokemon_discord_bot.Data
 
         [ForeignKey(nameof(PokemonStatsId))]
         public PokemonStats PokemonStats { get; set; } = null!;
+
+        //----------------------------------------------------------------------------------------------
+
+        public ApiPokemon ApiPokemon => ApiPokemonData.Instance.GetPokemon(ApiPokemonId);
+
+        public string GetFrontSprite()
+        {
+            //check if pokemon has a female gender through sprite
+            if (Gender == PokemonGender.FEMALE && ApiPokemon.Sprites.FrontFemale != null)
+            {
+                if (IsShiny)
+                {
+                    return ApiPokemon.Sprites.FrontShinyFemale;
+                }
+                return ApiPokemon.Sprites.FrontFemale;
+            }
+
+            //if not return default (male)
+            if (IsShiny) return ApiPokemon.Sprites.FrontShiny;
+            else return ApiPokemon.Sprites.FrontDefault;
+        }
     }
 }

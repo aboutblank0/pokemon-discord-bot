@@ -27,19 +27,19 @@ namespace pokemon_discord_bot
             }
 
             var encounter = await _encounterEventHandler.CreateRandomEncounterEvent(3, user.Id);
-            List<ApiPokemon> apiPokemons = new List<ApiPokemon>();
+            List<string> pokemonSprites = new List<string>();
 
             foreach(var pokemon in encounter.Pokemons)
             {
-                apiPokemons.Add(ApiPokemonData.Instance.GetPokemon(pokemon.ApiPokemonId));
-            }
 
-            var pokemonSprites = apiPokemons.Select(p => p.Sprites.FrontDefault).ToArray(); //TODO: Pick the correct sprite depending on gender/ isShiny etc
+                //Getting pokemon sprite with specific gender
+                pokemonSprites.Add(pokemon.GetFrontSprite());
+            }
 
             var bytes = await ImageEditor.CombineImagesAsync(pokemonSprites, 2.0f);
             var fileName = "coninhas.png";
             var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
-            var component = CardView.CreateDropView(fileName, Context.User.Mention, apiPokemons.ToArray());
+            var component = CardView.CreateDropView(fileName, Context.User.Mention, encounter);
 
             await Context.Channel.SendFileAsync(fileAttachment, components: component);
         }
