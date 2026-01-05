@@ -49,14 +49,15 @@ namespace pokemon_discord_bot
                 message.Author.IsBot)
                 return;
 
-            using var scope = _provider.CreateScope();
-
             var context = new SocketCommandContext(_client, message);
-            await _commands.ExecuteAsync(
-                context: context,
-                argPos: argPos,
-                services: scope.ServiceProvider);
+            _ = Task.Run(async () =>
+            {
+                using var scope = _provider.CreateScope();
+                await _commands.ExecuteAsync(
+                    context: context,
+                    argPos: argPos,
+                    services: scope.ServiceProvider);
+            });
         }
     }
-
 }
