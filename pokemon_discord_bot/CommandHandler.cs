@@ -24,6 +24,12 @@ namespace pokemon_discord_bot
             // Hook the MessageReceived event into our command handler
             _client.MessageReceived += HandleCommandAsync;
 
+            _commands.Log += (log) =>
+            {
+                Console.WriteLine(log);
+                return Task.CompletedTask;
+            };
+
             using var scope = _provider.CreateScope();
             await _commands.AddModulesAsync(assembly: Assembly.GetEntryAssembly(), services: scope.ServiceProvider);
         }
