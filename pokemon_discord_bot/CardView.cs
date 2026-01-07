@@ -30,5 +30,29 @@ namespace pokemon_discord_bot
 
             return builder;
         }
+
+        public static MessageComponent CreatePokemonView(String filename, Pokemon pokemon)
+        {
+            string pokemonStats = 
+                $"**HP:** {pokemon.PokemonStats.IvHp}\n" +
+                $"**ATK:** {pokemon.PokemonStats.IvAtk}\n" +
+                $"**DEF:** {pokemon.PokemonStats.IvDef}\n" +
+                $"**SPATK:** {pokemon.PokemonStats.IvSpAtk}\n" +
+                $"**SPDEF:** {pokemon.PokemonStats.IvSpDef}\n" +
+                $"**SPD:** {pokemon.PokemonStats.IvSpeed}\n" +
+                $"**SIZE:** {pokemon.PokemonStats.Size}";
+
+            var builder = new ComponentBuilderV2()
+                .WithContainer(new ContainerBuilder()
+                    .WithTextDisplay($"# {pokemon.FormatPokemonName(pokemon.ApiPokemon.Name)}")
+                    .WithAccentColor(Color.DarkBlue)
+                    .WithTextDisplay($"{pokemonStats}")
+                    .WithMediaGallery([
+                    "attachment://" + filename
+                    ]))
+                .Build();    
+
+            return builder;
+        }
     }
 }

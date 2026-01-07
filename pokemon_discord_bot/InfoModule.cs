@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using pokemon_discord_bot.Data;
 using PokemonBot.Data;
 
 namespace pokemon_discord_bot
@@ -40,6 +41,31 @@ namespace pokemon_discord_bot
             var fileName = "coninhas.png";
             var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
             var component = CardView.CreateDropView(fileName, Context.User.Mention, encounter);
+
+            await Context.Channel.SendFileAsync(fileAttachment, components: component);
+        }
+
+
+        [Command("view")]
+        public async Task PokemonViewAsync(int pokemonId)
+        {
+            var user = Context.User;
+
+            Pokemon pokemon = await _db.GetPokemonById(pokemonId);
+            var pokemonSize = pokemon.PokemonStats.Size;
+            List<string> pokemonSprite = new List<string>();
+            pokemonSprite.Add(pokemon.GetFrontSprite());
+            
+            if (!_encounterEventHandler.CanUserTriggerEncounter(user.Id))
+            {
+                await Context.Channel.SendMessageAsync($"{user.Mention} ACALMA-TE CARALHO");
+                return;
+            }
+
+            var bytes = await ImageEditor.CombineImagesAsync(pokemonSprite, pokemonSize);
+            var fileName = "pokemonview.png";
+            var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
+            var component = CardView.CreatePokemonView(fileName, pokemon);
 
             await Context.Channel.SendFileAsync(fileAttachment, components: component);
         }

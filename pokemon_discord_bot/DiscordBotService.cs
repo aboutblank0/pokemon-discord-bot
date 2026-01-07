@@ -29,8 +29,6 @@ namespace pokemon_discord_bot
             if (string.IsNullOrEmpty(_token))
                 throw new InvalidOperationException("DISCORD_BOT_TOKEN environment variable is missing.");
 
-            ApiPokemonData.Init();
-
             // Apply migrations on startup (using a temporary scope)
             using (var scope = _provider.CreateScope())
             {

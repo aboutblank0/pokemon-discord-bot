@@ -9,8 +9,8 @@ namespace pokemon_discord_bot
         private const uint DROP_COOLDOWN_SECONDS = 5;
         private const uint CLAIM_COOLDOWN_SECONDS = 5;
         private const double SHINY_CHANCE = 1d/10d;
-        private const int MIN_POKEMON_SIZE = 1;
-        private const int MAX_POKEMON_SIZE = 5;
+        private const float MIN_POKEMON_SIZE = 0.5f;
+        private const float MAX_POKEMON_SIZE = 1.5f;
 
         private Dictionary<ulong, DateTimeOffset> _lastTriggerTime;
         private Dictionary<ulong, DateTimeOffset> _lastClaimTime;
@@ -41,7 +41,7 @@ namespace pokemon_discord_bot
 
         private async Task<List<Pokemon>> CreateRandomPokemons(int pokemonAmount, EncounterEvent encounterEvent, AppDbContext db)
         {
-            List<ApiPokemon> randomPokemons = ApiPokemonData.GetRandomPokemon(3);
+            List<ApiPokemon> randomPokemons = ApiPokemonData.Instance.GetRandomPokemon(3);
             List<Pokemon> pokemons = new List<Pokemon>();
 
             foreach (ApiPokemon apiPokemon in randomPokemons)

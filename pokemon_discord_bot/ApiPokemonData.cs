@@ -8,11 +8,11 @@ namespace pokemon_discord_bot
     internal class ApiPokemonData
     {
         private const string FILENAME = "all_pokemons.json";
-        private static ApiPokemonData instance = null;
+        private static ApiPokemonData instance = null!;
         private static readonly object padlock = new object();
-        public Dictionary<int, ApiPokemon> Pokemons { get; private set; }
+        public Dictionary<int, ApiPokemon> Pokemons { get; private set; } = new Dictionary<int, ApiPokemon>();
 
-        private static uint totalWeight = 0;
+        private uint _totalWeight = 0;
 
         public static ApiPokemonData Instance
         {
@@ -29,15 +29,16 @@ namespace pokemon_discord_bot
             }
         }
 
-        public static void Init()
+        public ApiPokemonData()
         {
-            instance = new ApiPokemonData();
             var path = Path.Combine(AppContext.BaseDirectory, FILENAME);
             var json = File.ReadAllText(path);
-            instance.Pokemons = JsonSerializer.Deserialize<Dictionary<int, ApiPokemon>>(json)!;
+            Pokemons = JsonSerializer.Deserialize<Dictionary<int, ApiPokemon>>(json)!;
 
-            foreach (ApiPokemon pokemon in instance.Pokemons.Values) 
-                totalWeight += pokemon.Weight;
+            if (Pokemons == null) return;
+
+            foreach (ApiPokemon pokemon in Pokemons.Values)
+                _totalWeight += pokemon.Weight;
         }
 
         public ApiPokemon GetPokemon(int id)
@@ -46,7 +47,7 @@ namespace pokemon_discord_bot
             return Pokemons[id];
         }
 
-        public static List<ApiPokemon> GetRandomPokemon(uint quantity)
+        public List<ApiPokemon> GetRandomPokemon(uint quantity)
         {
             List<ApiPokemon> randomPokemons = new List<ApiPokemon>();
 
@@ -56,10 +57,9 @@ namespace pokemon_discord_bot
             return randomPokemons;
         }
 
-        public static ApiPokemon GetRandomPokemon()
+        public ApiPokemon GetRandomPokemon()
         {
-            int random = new Random().Next(0, (int)totalWeight);
-            Console.WriteLine(random);
+            int random = new Random().Next(0, (int)_totalWeight);
             foreach (ApiPokemon pokemon in instance.Pokemons.Values)
             {
                 random -= (int)pokemon.Weight;

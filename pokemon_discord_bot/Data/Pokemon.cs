@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using PokemonBot.Data;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace pokemon_discord_bot.Data
@@ -72,6 +74,13 @@ namespace pokemon_discord_bot.Data
             //if not return default (male)
             if (IsShiny) return ApiPokemon.Sprites.FrontShiny;
             else return ApiPokemon.Sprites.FrontDefault;
+        }
+
+        public string FormatPokemonName(string pokemonName)
+        {
+            if (string.IsNullOrEmpty(pokemonName)) return pokemonName;
+
+            return char.ToUpper(pokemonName[0]) + pokemonName.Substring(1);
         }
     }
 }

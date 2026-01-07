@@ -69,4 +69,14 @@ public class AppDbContext : DbContext
         
         base.OnModelCreating(modelBuilder);
     }
+
+    public async Task<Pokemon> GetPokemonById(int pokemonId)
+    {
+        return await Pokemon
+            .Include(p => p.PokemonStats)
+            .Include(p => p.CaughtWithItem)
+            .Include(p => p.EncounterEvent)
+            .FirstAsync(p => p.PokemonId == pokemonId);
+    }
+
 }
