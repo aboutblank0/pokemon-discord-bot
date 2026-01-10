@@ -84,7 +84,6 @@ namespace pokemon_discord_bot
                 {
                     int pokemonId = int.Parse(component.Data.CustomId.Substring("drop-button".Length));
                     Pokemon pokemon = await db.GetPokemonById(pokemonId);
-                    Console.WriteLine(pokemon.CaughtBy);
                     
                     if (pokemon.CaughtBy != 0) return;
 
@@ -92,7 +91,7 @@ namespace pokemon_discord_bot
                     pokemon.OwnedBy = interaction.User.Id;
                     db.SaveChanges();
 
-                    await component.RespondAsync($"{interaction.User.Mention} caught {pokemon.FormattedName} {emoji}");
+                    await component.RespondAsync($"{interaction.User.Mention} caught {pokemon.FormattedName} `{pokemon.IdBase36}` - IV: `{pokemon.PokemonStats.TotalIvPercent}%` {emoji}");
                 } 
             }
         }

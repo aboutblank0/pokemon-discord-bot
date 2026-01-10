@@ -47,11 +47,11 @@ namespace pokemon_discord_bot
 
 
         [Command("view")]
-        public async Task PokemonViewAsync(int pokemonId)
+        public async Task PokemonViewAsync(string pokemonId)
         {
             var user = Context.User;
 
-            Pokemon pokemon = await _db.GetPokemonById(pokemonId);
+            Pokemon pokemon = await _db.GetPokemonById(IdHelper.FromBase36(pokemonId));
             var pokemonSize = pokemon.PokemonStats.Size;
             List<string> pokemonSprites = new List<string>() { pokemon.GetFrontSprite() };
 
@@ -74,8 +74,8 @@ namespace pokemon_discord_bot
                 return;
             }
 
-            var component = CardView.CreateInventoryView(pokemonList, user.Id);
-            await Context.Channel.SendMessageAsync(null, components: component);
+            (var embed, var component) = CardView.CreateCollectionView(pokemonList, user, 0);
+            await Context.Channel.SendMessageAsync(null, embed: embed, components: component);
         }
     }
 

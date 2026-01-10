@@ -2,6 +2,7 @@
 using PokemonBot.Data;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text;
 
 namespace pokemon_discord_bot.Data
 {
@@ -56,6 +57,8 @@ namespace pokemon_discord_bot.Data
         public PokemonStats PokemonStats { get; set; } = null!;
 
         //----------------------------------------------------------------------------------------------
+
+        public string IdBase36 => IdHelper.ToBase36(PokemonId);
 
         public ApiPokemon ApiPokemon => ApiPokemonData.Instance.GetPokemon(ApiPokemonId);
         public string FormattedName {

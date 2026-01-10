@@ -1,5 +1,7 @@
 ﻿using Discord;
+using Discord.WebSocket;
 using pokemon_discord_bot.Data;
+using System.Reflection.Emit;
 using System.Text;
 
 namespace pokemon_discord_bot
@@ -10,6 +12,8 @@ namespace pokemon_discord_bot
         private static ButtonBuilder ButtonBuilder { get; set; } = null!;
         private static ActionRowBuilder ActionRowBuilder { get; set; } = null!;
         private static ComponentBuilderV2 ComponentBuilder { get; set; } = null!;
+
+        private const int POKEMONS_PER_COLLECTION_PAGE = 10;
 
         public static MessageComponent CreateDropView(String fileName, string user, EncounterEvent encounter)
         {
@@ -39,7 +43,7 @@ namespace pokemon_discord_bot
 
             return ComponentBuilder.Build();
         }
-
+        
         public static MessageComponent CreatePokemonView(String filename, Pokemon pokemon)
         {
             string pokemonStats =
@@ -65,27 +69,34 @@ namespace pokemon_discord_bot
             return builder;
         }
 
-        public static MessageComponent CreateInventoryView(List<Pokemon> pokemonList, ulong userId)
+        public static (Embed, MessageComponent) CreateCollectionView(List<Pokemon> pokemonList, SocketUser user, int pageIndex)
         {
             StringBuilder list = new StringBuilder();
 
-            foreach (Pokemon pokemon in pokemonList.Take(10))
+            var range = new Range(pageIndex * POKEMONS_PER_COLLECTION_PAGE, (pageIndex + 1) * POKEMONS_PER_COLLECTION_PAGE);
+            foreach (Pokemon pokemon in pokemonList.Take(range))
             {
-                list.AppendLine($"`{pokemon.PokemonId}` - `{pokemon.PokemonStats.TotalIvPercent}`% - `{pokemon.FormattedName}`");
+                string name = pokemon.FormattedName;
+                if (pokemon.IsShiny) name = pokemon.FormattedName + " ✨";
+                list.AppendLine($"**{name}** - `{pokemon.IdBase36}` - IV: `{pokemon.PokemonStats.TotalIvPercent}%`");
             }
 
             List<ButtonBuilder> buttonList = new List<ButtonBuilder>();
-            buttonList.Add(CreatePaginationButton($"pagination-button-first-page-{userId}", "\U000021A9"));
-            buttonList.Add(CreatePaginationButton($"pagination-button-previous-page-{userId}", "\U00002190"));
-            buttonList.Add(CreatePaginationButton($"pagination-button-next-page-{userId}", "\U00002192"));
-            buttonList.Add(CreatePaginationButton($"pagination-button-last-page-{userId}", "\U000021AA"));
+            buttonList.Add(CreatePaginationButton($"pagination-button-first-page-{user.Id}", "\U000021A9"));
+            buttonList.Add(CreatePaginationButton($"pagination-button-previous-page-{user.Id}", "\U00002190"));
+            buttonList.Add(CreatePaginationButton($"pagination-button-next-page-{user.Id}", "\U00002192"));
+            buttonList.Add(CreatePaginationButton($"pagination-button-last-page-{user.Id}", "\U000021AA"));
 
-            var builder = new ComponentBuilderV2()
-                .WithTextDisplay(list.ToString())
+            var embed = new EmbedBuilder()
+                .WithColor(Color.DarkPurple)
+                .WithDescription($"### {user.Mention}'s collection\n\n\n" + list.ToString())
+                .Build();
+
+            var component = new ComponentBuilderV2()
                 .WithActionRow(buttonList)
                 .Build();
 
-            return builder;
+            return (embed, component);
         }
 
         private static ButtonBuilder CreatePaginationButton(string customId, string label)
