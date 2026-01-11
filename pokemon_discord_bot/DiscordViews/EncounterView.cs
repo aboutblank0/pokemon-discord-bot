@@ -1,11 +1,12 @@
 ﻿using Discord;
+using Discord.WebSocket;
 using pokemon_discord_bot.Data;
 
 namespace pokemon_discord_bot.DiscordViews
 {
     public class EncounterView
     {
-        public static MessageComponent CreateEncounterView(String fileName, string user, EncounterEvent encounter)
+        public static MessageComponent CreateEncounterView(String fileName, SocketUser user, EncounterEvent encounter)
         {
             List<ButtonBuilder> buttonList = new List<ButtonBuilder>();
 
@@ -18,7 +19,7 @@ namespace pokemon_discord_bot.DiscordViews
             }
 
             var builder = new ComponentBuilderV2()
-                .WithTextDisplay($"{user} found 3 pokemons!")
+                .WithTextDisplay($"{user.Mention} found 3 pokemons!")
                 .WithMediaGallery([
                     "attachment://" + fileName
                 ])

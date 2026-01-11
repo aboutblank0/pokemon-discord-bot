@@ -50,24 +50,6 @@ namespace pokemon_discord_bot
 
             await Task.Delay(TimeSpan.FromMinutes(1.5));
         }
-
-
-        [Command("view")]
-        public async Task PokemonViewAsync(string pokemonId)
-        {
-            var user = Context.User;
-
-            Pokemon pokemon = await _db.GetPokemonById(IdHelper.FromBase36(pokemonId));
-            var pokemonSize = pokemon.PokemonStats.Size;
-            List<string> pokemonSprites = new List<string>() { pokemon.GetFrontSprite() };
-
-            var bytes = await ImageEditor.CombineImagesAsync(pokemonSprites, pokemonSize);
-            var fileName = "pokemonview.png";
-            var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
-            var embed = PokemonView.CreatePokemonView(fileName, pokemon);
-
-            await Context.Channel.SendFileAsync(fileAttachment, embed: embed);
-        }
     }
 
     // Create a module with the 'sample' prefix
