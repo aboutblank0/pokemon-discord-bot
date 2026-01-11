@@ -51,7 +51,6 @@ namespace pokemon_discord_bot
             // Create a number to track where the prefix ends and the command begins
             int argPos = 0;
 
-
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
             bool hasPrefix = message.HasCharPrefix('p', ref argPos) ||
                             message.HasCharPrefix('P', ref argPos);
@@ -71,7 +70,7 @@ namespace pokemon_discord_bot
                     services: scope.ServiceProvider);
             });
         }
-
+        
         private async Task HandleInteractionAsync(SocketInteraction interaction)
         {
             using var scope = _provider.CreateScope();

@@ -79,7 +79,7 @@ public class AppDbContext : DbContext
             .FirstAsync(p => p.PokemonId == pokemonId);
     }
 
-    public async Task<List<Pokemon>> GetUserPokemonsAsync(ulong userId)
+    public async Task<List<Pokemon>> GetUserPokemonListAsync(ulong userId)
     {
         return await Pokemon
             .Include(p => p.PokemonStats)
@@ -87,6 +87,16 @@ public class AppDbContext : DbContext
             .Where(p => p.OwnedBy == userId)
             .OrderBy(p => p.PokemonId)
             .ToListAsync();
+    }
+
+    public async Task<int> GetUserPokemonCountAsync(ulong userId)
+    {
+        return await Pokemon
+            .Include(p => p.PokemonStats)
+            .Include(p => p.CaughtWithItem)
+            .Where(p => p.OwnedBy == userId)
+            .OrderBy(p => p.PokemonId)
+            .CountAsync();
     }
 
 }

@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using pokemon_discord_bot.Data;
+using pokemon_discord_bot.DiscordViews;
 using PokemonBot.Data;
 
 namespace pokemon_discord_bot
@@ -19,7 +20,7 @@ namespace pokemon_discord_bot
 
         [Command("drop")]
         public async Task DropAsync()
-        {   
+        {
             var user = Context.User;
             if (!_encounterEventHandler.CanUserTriggerEncounter(user.Id))
             {
@@ -40,9 +41,11 @@ namespace pokemon_discord_bot
             var bytes = await ImageEditor.CombineImagesAsync(pokemonSprites, 2.0f);
             var fileName = "coninhas.png";
             var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
-            var component = CardView.CreateDropView(fileName, Context.User.Mention, encounter);
+            var component = EncounterView.CreateEncounterView(fileName, Context.User.Mention, encounter);
 
             await Context.Channel.SendFileAsync(fileAttachment, components: component);
+
+            await Task.Delay(TimeSpan.FromMinutes(1.5));
         }
 
 
@@ -58,23 +61,23 @@ namespace pokemon_discord_bot
             var bytes = await ImageEditor.CombineImagesAsync(pokemonSprites, pokemonSize);
             var fileName = "pokemonview.png";
             var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
-            var component = CardView.CreatePokemonView(fileName, pokemon);
+            var embed = PokemonView.CreatePokemonView(fileName, pokemon);
 
-            await Context.Channel.SendFileAsync(fileAttachment, components: component);
+            await Context.Channel.SendFileAsync(fileAttachment, embed: embed);
         }
 
-        [Command("inv")]
+        [Command("c")]
         public async Task UserPokemonCollection()
         {
             var user = Context.User;
 
-            List<Pokemon> pokemonList = await _db.GetUserPokemonsAsync(user.Id);
+            List<Pokemon> pokemonList = await _db.GetUserPokemonListAsync(user.Id);
             if (pokemonList.Count == 0) {
                 await Context.Channel.SendMessageAsync($"{user.Mention} You have no pokemons :(");
                 return;
             }
 
-            (var embed, var component) = CardView.CreateCollectionView(pokemonList, user, 0);
+            (var embed, var component) = CollectionView.CreateCollectionView(pokemonList, user, 0);
             await Context.Channel.SendMessageAsync(null, embed: embed, components: component);
         }
     }
