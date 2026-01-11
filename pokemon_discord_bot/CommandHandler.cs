@@ -4,6 +4,7 @@ using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using pokemon_discord_bot.Data;
+using pokemon_discord_bot.Example;
 using PokemonBot.Data;
 using System.Reflection;
 
@@ -14,13 +15,15 @@ namespace pokemon_discord_bot
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly IServiceProvider _provider;
+        private readonly InteractionService _interactionService;
 
         // Retrieve client and CommandService instance via ctor
-        public CommandHandler(DiscordSocketClient client, CommandService commands, IServiceProvider provider)
+        public CommandHandler(DiscordSocketClient client, CommandService commands, IServiceProvider provider, InteractionService interactionService)
         {
             _provider = provider;
             _commands = commands;
             _client = client;
+            _interactionService = interactionService;
         }
 
         public async Task InstallCommandsAsync()
@@ -71,7 +74,7 @@ namespace pokemon_discord_bot
 
         private async Task HandleInteractionAsync(SocketInteraction interaction)
         {
-            var scope = _provider.CreateScope();
+            using var scope = _provider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             Random random = new Random();
@@ -80,6 +83,13 @@ namespace pokemon_discord_bot
 
             if (interaction is SocketMessageComponent component)
             {
+                var view = _interactionService.TryGetView(component.Message.Id);
+                if (view != null)
+                {
+                    await view.HandleInteraction(component, scope.ServiceProvider);
+                    return;
+                }
+
                 if (component.Data.CustomId.Contains("drop-button")) 
                 {
                     int pokemonId = int.Parse(component.Data.CustomId.Substring("drop-button".Length));
