@@ -139,4 +139,12 @@ public class AppDbContext : DbContext
             .Where(p => p.OwnedBy == userId)
             .ToListAsync();
     }
+
+    public async Task<List<PlayerInventory>> GetUserInventoryAsync(ulong userId)
+    {
+        return await PlayerInventory
+                .Include(ui => ui.Item)
+                .Where(ui => ui.PlayerId == userId)
+                .ToListAsync();
+    }
 }

@@ -1,18 +1,23 @@
-﻿using Discord.Commands;
-using Microsoft.EntityFrameworkCore;
+﻿using Discord;
+using Discord.Commands;
+using pokemon_discord_bot.Data;
+using pokemon_discord_bot.DiscordViews;
 using pokemon_discord_bot.Services;
 using PokemonBot.Data;
+
 namespace pokemon_discord_bot.Modules
 {
     public class DailyRewardModule : ModuleBase<SocketCommandContext>
     {
         private readonly AppDbContext _dbContext; 
         private readonly DailyRewardService _dailyRewardService;
+        private readonly InteractionService _interactionService;
 
-        public DailyRewardModule(AppDbContext dbContext, DailyRewardService dailyRewardService)
+        public DailyRewardModule(AppDbContext dbContext, DailyRewardService dailyRewardService, InteractionService interactionService)
         {
             _dbContext = dbContext;
             _dailyRewardService = dailyRewardService;
+            _interactionService = interactionService;
         }
 
         [Command("daily")]
@@ -26,6 +31,7 @@ namespace pokemon_discord_bot.Modules
                 try
                 {
                     await _dailyRewardService.ClaimDailyReward(Context.User.Id, _dbContext);
+                    await ReplyAsync($"{Context.User.Mention} Claimed his reward!.");
                 } 
                 catch (Exception ex) {
 
@@ -44,11 +50,18 @@ namespace pokemon_discord_bot.Modules
         {
             var userId = Context.User.Id;
 
-            // Fetch the user's items from the database
-            var userItems = await _dbContext.PlayerInventory
-                .Include(ui => ui.Item)
-                .Where(ui => ui.PlayerId == userId)
-                .ToListAsync();
+            List<PlayerInventory> playerInventories = await _dbContext.GetUserInventoryAsync(userId);
+
+            var inventoryView = new InventoryView(userId, playerInventories);
+            var embed = inventoryView.GetEmbed();
+            var component = inventoryView.GetComponent();
+            var message = await Context.Channel.SendMessageAsync(null, embed: embed, components: component);
+
+            _interactionService.RegisterView(message.Id, inventoryView);
+
+            await Task.Delay(TimeSpan.FromMinutes(3));
+
+            _interactionService.UnregisterView(message.Id);
         }
     }
 }
