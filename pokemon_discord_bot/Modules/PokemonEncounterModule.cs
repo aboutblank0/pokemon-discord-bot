@@ -1,0 +1,65 @@
+﻿using Discord;
+using Discord.Commands;
+using pokemon_discord_bot.DiscordViews;
+using pokemon_discord_bot.Services;
+using PokemonBot.Data;
+
+namespace pokemon_discord_bot.Modules
+{
+    [Group("encounter")]
+    [Alias("e", "f", "find")]
+    public class PokemonEncounterModule : ModuleBase<SocketCommandContext>
+    {
+
+        private readonly InteractionService _interactionService;
+        private readonly EncounterEventHandler _encounterEventHandler;
+        private readonly AppDbContext _db;
+
+        public PokemonEncounterModule(InteractionService interactionService, EncounterEventHandler encounterEventHandler, AppDbContext db)
+        {
+            _interactionService = interactionService;
+            _encounterEventHandler = encounterEventHandler;
+            _db = db;
+        }
+
+        [Command("")]
+        public async Task DropAsync()
+        {
+            var user = Context.User;
+
+            if (!_encounterEventHandler.CanUserTriggerEncounter(user.Id))
+            {
+                await Context.Channel.SendMessageAsync($"{user.Mention} ACALMA-TE CARALHO");
+                return;
+            }
+            
+            var encounter = await _encounterEventHandler.CreateRandomEncounterEvent(3, user.Id, _db);
+            List<string> pokemonSprites = new List<string>();
+
+            foreach (var pokemon in encounter.Pokemons)
+            {
+                //Getting pokemon sprite with specific gender
+                pokemonSprites.Add(pokemon.GetFrontSprite());
+            }
+
+            var bytes = await ImageEditor.CombineImagesAsync(pokemonSprites, 2.0f);
+            var fileName = "coninhas.png";
+            var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
+            var encounterView = new EncounterView(_encounterEventHandler, encounter, user, fileName);
+            var component = encounterView.GetComponent();
+
+            var message = await Context.Channel.SendFileAsync(fileAttachment, components: component);
+
+            _interactionService.RegisterView(message.Id, encounterView);
+
+            await Task.Delay(TimeSpan.FromMinutes(1));
+
+            await message.ModifyAsync(msg =>
+            {
+                msg.Components = encounterView.GetExpiredContent();
+            });
+
+            _interactionService.UnregisterView(message.Id);
+        }
+    }
+}

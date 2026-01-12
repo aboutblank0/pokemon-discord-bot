@@ -7,6 +7,7 @@ namespace pokemon_discord_bot.Services
     {
         private const uint DROP_COOLDOWN_SECONDS = 5;
         private const uint CLAIM_COOLDOWN_SECONDS = 5;
+        private const uint OTHER_USER_CATCHABLE_COOLDOWN = 5;
         private const double SHINY_CHANCE = 1d/10d;
         private const float MIN_POKEMON_SIZE = 0.5f;
         private const float MAX_POKEMON_SIZE = 1.5f;
@@ -71,14 +72,26 @@ namespace pokemon_discord_bot.Services
             return pokemons;
         }
 
+        public double GetTimeSinceLastTrigger(ulong userId)
+        {
+            DateTimeOffset lastTrigger = _lastTriggerTime[userId];
+            var elapsed = DateTimeOffset.UtcNow - lastTrigger;
+
+            return elapsed.TotalSeconds;
+        }
+
         public bool CanUserTriggerEncounter(ulong userId)
         {
             if (!_lastTriggerTime.ContainsKey(userId)) return true;
 
-            //Check if user is on cooldown
-            DateTimeOffset lastTrigger = _lastTriggerTime[userId];
-            var elapsed = DateTimeOffset.UtcNow - lastTrigger;
-            return elapsed.TotalSeconds > DROP_COOLDOWN_SECONDS;
+            return GetTimeSinceLastTrigger(userId) > DROP_COOLDOWN_SECONDS;
+        }
+
+        public bool CanDifferentUserClaimPokemon(ulong userId)
+        {
+            if (!_lastTriggerTime.ContainsKey(userId)) return true;
+
+            return GetTimeSinceLastTrigger(userId) > OTHER_USER_CATCHABLE_COOLDOWN;
         }
     }
 }

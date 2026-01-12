@@ -74,10 +74,6 @@ namespace pokemon_discord_bot
             using var scope = _provider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            Random random = new Random();
-            var guild = _client.GetGuild(interaction.GuildId ?? 0);
-            var emoji = guild.Emotes.ElementAt(random.Next(guild.Emotes.Count));
-
             if (interaction is SocketMessageComponent component)
             {
                 var view = _interactionService.TryGetView(component.Message.Id);
@@ -86,20 +82,6 @@ namespace pokemon_discord_bot
                     await view.HandleInteraction(component, scope.ServiceProvider);
                     return;
                 }
-
-                if (component.Data.CustomId.Contains("drop-button")) 
-                {
-                    int pokemonId = int.Parse(component.Data.CustomId.Substring("drop-button".Length));
-                    Pokemon pokemon = await db.GetPokemonById(pokemonId);
-                    
-                    if (pokemon.CaughtBy != 0) return;
-
-                    pokemon.CaughtBy = interaction.User.Id;
-                    pokemon.OwnedBy = interaction.User.Id;
-                    db.SaveChanges();
-
-                    await component.RespondAsync($"{interaction.User.Mention} caught {pokemon.FormattedName} `{pokemon.IdBase36}` - IV: `{pokemon.PokemonStats.TotalIvPercent}%` {emoji}");
-                } 
             }
         }
     }

@@ -1,9 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
 using pokemon_discord_bot.Data;
 using pokemon_discord_bot.Example;
-using PokemonBot.Data;
 using System.Text;
 
 namespace pokemon_discord_bot.DiscordViews

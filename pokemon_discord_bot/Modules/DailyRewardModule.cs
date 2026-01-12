@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using Microsoft.EntityFrameworkCore;
 using pokemon_discord_bot.Services;
 using PokemonBot.Data;
 using System.Runtime.CompilerServices;

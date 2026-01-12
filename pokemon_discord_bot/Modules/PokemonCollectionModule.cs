@@ -3,11 +3,6 @@ using pokemon_discord_bot.Data;
 using pokemon_discord_bot.DiscordViews;
 using pokemon_discord_bot.Services;
 using PokemonBot.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace pokemon_discord_bot.Modules
 {
@@ -76,7 +71,7 @@ namespace pokemon_discord_bot.Modules
 
             _interactionService.RegisterView(message.Id, collectionView);
 
-            await Task.Delay(TimeSpan.FromMinutes(1));
+            await Task.Delay(TimeSpan.FromMinutes(3));
 
             _interactionService.UnregisterView(message.Id);
         }
