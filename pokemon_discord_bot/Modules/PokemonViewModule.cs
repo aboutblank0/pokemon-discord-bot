@@ -18,20 +18,37 @@ namespace pokemon_discord_bot.Modules
         }
 
         [Command("view")]
-        public async Task PokemonViewAsync(string pokemonId)
+        [Alias("v")]
+        public async Task PokemonViewAsync(string? pokemonId = null)
         {
             var user = Context.User;
+            var fileName = "pokemonview.png";
+
+
+            if (pokemonId == null)
+            {
+                Pokemon lastPokemon = await _db.GetLastPokemonCaught(user.Id);
+                var lastPokemonEmbed = new PokemonView(fileName, lastPokemon).GetEmbed();
+
+                await Context.Channel.SendFileAsync(attachment: await GetPokemonAttachment(fileName, lastPokemon), embed: lastPokemonEmbed);
+                return;
+            }
 
             Pokemon pokemon = await _db.GetPokemonById(IdHelper.FromBase36(pokemonId));
+            var embed = new PokemonView(fileName, pokemon).GetEmbed();
+
+            await Context.Channel.SendFileAsync(attachment: await GetPokemonAttachment(fileName, pokemon), embed: embed);
+        }
+
+        private async Task<FileAttachment> GetPokemonAttachment(string fileName, Pokemon pokemon)
+        {
             var pokemonSize = pokemon.PokemonStats.Size;
             List<string> pokemonSprites = new List<string>() { pokemon.GetFrontSprite() };
 
             var bytes = await ImageEditor.CombineImagesAsync(pokemonSprites, pokemonSize);
-            var fileName = "pokemonview.png";
             var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
-            var embed = new PokemonView(fileName, pokemon).GetEmbed();
 
-            await Context.Channel.SendFileAsync(fileAttachment, embed: embed);
+            return fileAttachment;
         }
     }
 }

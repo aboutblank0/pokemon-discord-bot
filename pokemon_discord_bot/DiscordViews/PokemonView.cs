@@ -31,6 +31,7 @@ namespace pokemon_discord_bot.DiscordViews
                 .WithColor((uint)new Random().Next(0, 16777216))
                 .WithThumbnailUrl("attachment://" + _filename)
                 .WithDescription($"### Pokemon stats\n" +
+                    $"Owned by <@{_pokemon.CaughtBy}> \n\n" +
                     $"Name: **{_pokemon.FormattedName}** (`{_pokemon.IdBase36}`)\n" +
                     $"Total IV: **{_pokemon.PokemonStats.TotalIvPercent}%**\n" +
                     $"{pokemonStats}")
@@ -38,7 +39,5 @@ namespace pokemon_discord_bot.DiscordViews
 
             return builder;
         }
-
-        
     }
 }

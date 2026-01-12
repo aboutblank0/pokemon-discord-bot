@@ -131,6 +131,17 @@ public class AppDbContext : DbContext
             .FirstAsync(p => p.PokemonId == pokemonId);
     }
 
+    public async Task<Pokemon> GetLastPokemonCaught(ulong userId)
+    {
+        return await Pokemon
+            .Include(p => p.PokemonStats)
+            .Include(p => p.CaughtWithItem)
+            .Include(p => p.EncounterEvent)
+            .Where(p => p.OwnedBy == userId)
+            .OrderByDescending(p => p.PokemonId)
+            .FirstAsync();
+    }
+
     public async Task<List<Pokemon>> GetUserPokemonListAsync(ulong userId)
     {
         return await Pokemon
