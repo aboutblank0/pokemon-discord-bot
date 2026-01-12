@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using pokemon_discord_bot.Services;
 using PokemonBot.Data;
-using System.Runtime.CompilerServices;
 namespace pokemon_discord_bot.Modules
 {
     public class DailyRewardModule : ModuleBase<SocketCommandContext>
@@ -23,9 +22,20 @@ namespace pokemon_discord_bot.Modules
             var canClaim = await _dailyRewardService.CanClaimReward(Context.User.Id, _dbContext);
 
             if (canClaim)
-                await ReplyAsync($"{Context.User.Mention} Daily reward IS available");
+            {
+                try
+                {
+                    await _dailyRewardService.ClaimDailyReward(Context.User.Id, _dbContext);
+                } 
+                catch (Exception ex) {
+
+                    await ReplyAsync($"{Context.User.Mention} There was an error claiming your daily reward.");
+                }
+            }
             else
-                await ReplyAsync($"{Context.User.Mention} You have already claimed your daily reward today. Please come back tomorrow!");
+            {
+                await ReplyAsync($"{Context.User.Mention} You have already claimed your daily reward today. Try again tomorrow.");
+            }
         }
 
         //TODO: MOVE TO SEPARATE MODULE
@@ -39,7 +49,6 @@ namespace pokemon_discord_bot.Modules
                 .Include(ui => ui.Item)
                 .Where(ui => ui.PlayerId == userId)
                 .ToListAsync();
-
         }
     }
 }
