@@ -45,7 +45,8 @@ namespace pokemon_discord_bot.Modules
         }
 
         //TODO: MOVE TO SEPARATE MODULE
-        [Command("inv")]
+        [Command("inventory")]
+        [Alias("inv", "i")]
         public async Task InventoryAsync()
         {
             var userId = Context.User.Id;

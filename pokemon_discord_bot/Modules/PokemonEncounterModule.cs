@@ -7,7 +7,7 @@ using PokemonBot.Data;
 namespace pokemon_discord_bot.Modules
 {
     [Group("encounter")]
-    [Alias("e", "f", "find")]
+    [Alias("e", "f", "find", "d", "drop")]
     public class PokemonEncounterModule : ModuleBase<SocketCommandContext>
     {
 
