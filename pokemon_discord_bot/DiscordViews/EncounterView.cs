@@ -59,10 +59,6 @@ namespace pokemon_discord_bot.DiscordViews
         {
             var db = serviceProvider.GetRequiredService<AppDbContext>();
 
-            //Random random = new Random();
-            //var guild = _client.GetGuild(component.GuildId ?? 0);
-            //var emoji = guild.Emotes.ElementAt(random.Next(guild.Emotes.Count));
-
             if (component.User.Id != _user.Id && _encounterEventHandler.CanDifferentUserClaimPokemon(_user.Id) == false)
             {
                 await component.RespondAsync("You cannot interact with this button!", ephemeral: true);
@@ -76,6 +72,7 @@ namespace pokemon_discord_bot.DiscordViews
 
             pokemon.CaughtBy = component.User.Id;
             pokemon.OwnedBy = component.User.Id;
+            pokemon.OwnedAt = DateTimeOffset.UtcNow;
             db.SaveChanges();
 
             await component.RespondAsync($"{component.User.Mention} caught {pokemon.FormattedName} `{pokemon.IdBase36}` - IV: `{pokemon.PokemonStats.TotalIvPercent}%`");

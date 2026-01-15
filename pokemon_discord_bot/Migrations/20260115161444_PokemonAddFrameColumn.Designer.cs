@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PokemonBot.Data;
@@ -12,9 +13,11 @@ using PokemonBot.Data;
 namespace pokemon_discord_bot.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260115161444_PokemonAddFrameColumn")]
+    partial class PokemonAddFrameColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -150,57 +153,6 @@ namespace pokemon_discord_bot.Migrations
                     b.ToTable("encounter_events");
                 });
 
-            modelBuilder.Entity("pokemon_discord_bot.Data.Frame", b =>
-                {
-                    b.Property<int>("FrameId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("frame_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FrameId"));
-
-                    b.Property<int>("Cost")
-                        .HasColumnType("integer")
-                        .HasColumnName("cost");
-
-                    b.Property<string>("ImgPath")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("img");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("name");
-
-                    b.Property<bool>("Tradeable")
-                        .HasColumnType("boolean")
-                        .HasColumnName("tradeable");
-
-                    b.HasKey("FrameId");
-
-                    b.ToTable("frames");
-
-                    b.HasData(
-                        new
-                        {
-                            FrameId = 1,
-                            Cost = 0,
-                            ImgPath = "assets/frames/default_frame.png",
-                            Name = "Default Frame",
-                            Tradeable = true
-                        },
-                        new
-                        {
-                            FrameId = 2,
-                            Cost = 0,
-                            ImgPath = "assets/frames/pokemon_frame.png",
-                            Name = "Pokemon Frame",
-                            Tradeable = true
-                        });
-                });
-
             modelBuilder.Entity("pokemon_discord_bot.Data.Item", b =>
                 {
                     b.Property<int>("ItemId")
@@ -285,10 +237,6 @@ namespace pokemon_discord_bot.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("InventoryId"));
 
-                    b.Property<int?>("FrameId")
-                        .HasColumnType("integer")
-                        .HasColumnName("frame_id");
-
                     b.Property<int>("ItemId")
                         .HasColumnType("integer")
                         .HasColumnName("item_id");
@@ -302,8 +250,6 @@ namespace pokemon_discord_bot.Migrations
                         .HasColumnName("quantity");
 
                     b.HasKey("InventoryId");
-
-                    b.HasIndex("FrameId");
 
                     b.HasIndex("ItemId");
 
@@ -342,9 +288,10 @@ namespace pokemon_discord_bot.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("encounter_event_id");
 
-                    b.Property<int?>("FrameId")
-                        .HasColumnType("integer")
-                        .HasColumnName("frame_id");
+                    b.Property<string>("Frame")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("frame");
 
                     b.Property<int?>("Gender")
                         .HasColumnType("integer")
@@ -353,10 +300,6 @@ namespace pokemon_discord_bot.Migrations
                     b.Property<bool>("IsShiny")
                         .HasColumnType("boolean")
                         .HasColumnName("is_shiny");
-
-                    b.Property<DateTimeOffset>("OwnedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("owned_at");
 
                     b.Property<long>("OwnedBy")
                         .HasColumnType("bigint")
@@ -371,8 +314,6 @@ namespace pokemon_discord_bot.Migrations
                     b.HasIndex("CaughtWith");
 
                     b.HasIndex("EncounterEventId");
-
-                    b.HasIndex("FrameId");
 
                     b.HasIndex("OwnedBy")
                         .HasDatabaseName("idx_pokemon_owned_by");
@@ -456,17 +397,11 @@ namespace pokemon_discord_bot.Migrations
 
             modelBuilder.Entity("pokemon_discord_bot.Data.PlayerInventory", b =>
                 {
-                    b.HasOne("pokemon_discord_bot.Data.Frame", "Frame")
-                        .WithMany()
-                        .HasForeignKey("FrameId");
-
                     b.HasOne("pokemon_discord_bot.Data.Item", "Item")
                         .WithMany()
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Frame");
 
                     b.Navigation("Item");
                 });
@@ -481,10 +416,6 @@ namespace pokemon_discord_bot.Migrations
                         .WithMany("Pokemons")
                         .HasForeignKey("EncounterEventId");
 
-                    b.HasOne("pokemon_discord_bot.Data.Frame", "Frame")
-                        .WithMany()
-                        .HasForeignKey("FrameId");
-
                     b.HasOne("pokemon_discord_bot.Data.PokemonStats", "PokemonStats")
                         .WithMany()
                         .HasForeignKey("PokemonStatsId")
@@ -494,8 +425,6 @@ namespace pokemon_discord_bot.Migrations
                     b.Navigation("CaughtWithItem");
 
                     b.Navigation("EncounterEvent");
-
-                    b.Navigation("Frame");
 
                     b.Navigation("PokemonStats");
                 });

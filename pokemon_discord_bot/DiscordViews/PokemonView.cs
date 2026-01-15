@@ -32,7 +32,8 @@ namespace pokemon_discord_bot.DiscordViews
                 .WithDescription($"### Pokemon stats\n" +
                     $"Owned by <@{_pokemon.OwnedBy}> \n\n" +
                     $"Name: **{_pokemon.FormattedName}** (`{_pokemon.IdBase36}`)\n" +
-                    $"Total IV: **{_pokemon.PokemonStats.TotalIvPercent}%**\n")
+                    $"Total IV: **{_pokemon.PokemonStats.TotalIvPercent}%**\n" +
+                    $"{pokemonStats}")
                 .WithImageUrl("attachment://" + _filename)
                 .Build();
             return builder;

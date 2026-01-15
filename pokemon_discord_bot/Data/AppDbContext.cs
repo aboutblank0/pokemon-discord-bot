@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
     public DbSet<EncounterEvent> EncounterEvents => Set<EncounterEvent>();
     public DbSet<Pokemon> Pokemon => Set<Pokemon>();
     public DbSet<Item> Items => Set<Item>();
+    public DbSet<Frame> Frames => Set<Frame>();
 
     public DbSet<PlayerInventory> PlayerInventory => Set<PlayerInventory>();
     public DbSet<DailyReward> DailyRewards => Set<DailyReward>();
@@ -29,7 +30,8 @@ public class AppDbContext : DbContext
 
         SetupItems(modelBuilder);
         SetupDailyRewards(modelBuilder);
-        
+        SetupFrames(modelBuilder);
+
         base.OnModelCreating(modelBuilder);
     }
 
@@ -122,6 +124,28 @@ public class AppDbContext : DbContext
         );
     }
 
+    private void SetupFrames(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Frame>().HasData(
+            new Frame
+            {
+                FrameId = 1,
+                Name = "Default Frame",
+                Tradeable = true,
+                Cost = 0,
+                ImgPath = "assets/frames/default_frame.png"
+            },
+            new Frame
+            {
+                FrameId = 2,
+                Name = "Pokemon Frame",
+                Tradeable = true,
+                Cost = 0,
+                ImgPath = "assets/frames/pokemon_frame.png"
+            }
+        );
+    }
+
     public async Task<Pokemon> GetPokemonById(int pokemonId)
     {
         return await Pokemon
@@ -131,14 +155,14 @@ public class AppDbContext : DbContext
             .FirstAsync(p => p.PokemonId == pokemonId);
     }
 
-    public async Task<Pokemon> GetLastPokemonCaught(ulong userId)
+    public async Task<Pokemon> GetLastPokemonOwned(ulong userId)
     {
         return await Pokemon
             .Include(p => p.PokemonStats)
             .Include(p => p.CaughtWithItem)
             .Include(p => p.EncounterEvent)
             .Where(p => p.OwnedBy == userId)
-            .OrderByDescending(p => p.PokemonId)
+            .OrderByDescending(p => p.OwnedAt)
             .FirstAsync();
     }
 

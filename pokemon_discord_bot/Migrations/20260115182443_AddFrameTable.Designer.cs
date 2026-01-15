@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PokemonBot.Data;
@@ -12,9 +13,11 @@ using PokemonBot.Data;
 namespace pokemon_discord_bot.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260115182443_AddFrameTable")]
+    partial class AddFrameTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -181,24 +184,6 @@ namespace pokemon_discord_bot.Migrations
                     b.HasKey("FrameId");
 
                     b.ToTable("frames");
-
-                    b.HasData(
-                        new
-                        {
-                            FrameId = 1,
-                            Cost = 0,
-                            ImgPath = "assets/frames/default_frame.png",
-                            Name = "Default Frame",
-                            Tradeable = true
-                        },
-                        new
-                        {
-                            FrameId = 2,
-                            Cost = 0,
-                            ImgPath = "assets/frames/pokemon_frame.png",
-                            Name = "Pokemon Frame",
-                            Tradeable = true
-                        });
                 });
 
             modelBuilder.Entity("pokemon_discord_bot.Data.Item", b =>
@@ -353,10 +338,6 @@ namespace pokemon_discord_bot.Migrations
                     b.Property<bool>("IsShiny")
                         .HasColumnType("boolean")
                         .HasColumnName("is_shiny");
-
-                    b.Property<DateTimeOffset>("OwnedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("owned_at");
 
                     b.Property<long>("OwnedBy")
                         .HasColumnType("bigint")

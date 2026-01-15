@@ -19,6 +19,12 @@ namespace pokemon_discord_bot.Data
         [ForeignKey(nameof(ItemId))]
         public Item Item { get; set; } = null!;
 
+        [Column("frame_id")]
+        public int? FrameId { get; set; }
+
+        [ForeignKey(nameof(FrameId))]
+        public Frame Frame { get; set; } = null!;
+
         [Column("quantity")]
         [Range(1, int.MaxValue)]
         public int Quantity { get; set; } = 1;

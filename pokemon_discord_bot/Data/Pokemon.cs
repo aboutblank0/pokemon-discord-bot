@@ -38,6 +38,9 @@ namespace pokemon_discord_bot.Data
         [Column("owned_by", TypeName = "bigint")]
         public ulong OwnedBy { get; set; }
 
+        [Column("owned_at")]
+        public DateTimeOffset OwnedAt { get; set; }
+
         [Column("is_shiny")]
         public bool IsShiny { get; set; } = false;
 
@@ -55,6 +58,12 @@ namespace pokemon_discord_bot.Data
 
         [ForeignKey(nameof(PokemonStatsId))]
         public PokemonStats PokemonStats { get; set; } = null!;
+
+        [Column("frame_id")]
+        public int? FrameId { get; set; }
+
+        [ForeignKey(nameof(FrameId))]
+        public Frame Frame { get; set; } = null!;
 
         //----------------------------------------------------------------------------------------------
 
