@@ -1,8 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using PokemonBot.Data;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace pokemon_discord_bot.Data
 {
@@ -60,7 +57,7 @@ namespace pokemon_discord_bot.Data
         public PokemonStats PokemonStats { get; set; } = null!;
 
         [Column("frame_id")]
-        public int? FrameId { get; set; }
+        public int? FrameId { get; set; } = 1;
 
         [ForeignKey(nameof(FrameId))]
         public Frame Frame { get; set; } = null!;

@@ -4,6 +4,7 @@ using Discord;
 using Discord.Commands;
 using pokemon_discord_bot.Data;
 using pokemon_discord_bot.DiscordViews;
+using pokemon_discord_bot.Services;
 using PokemonBot.Data;
 
 namespace pokemon_discord_bot.Modules
@@ -11,10 +12,12 @@ namespace pokemon_discord_bot.Modules
     public class PokemonViewModule : ModuleBase<SocketCommandContext>
     {
         private readonly AppDbContext _db;
+        private readonly PokemonHandler _pokemonViewHandler;
 
-        public PokemonViewModule(AppDbContext db)
+        public PokemonViewModule(AppDbContext db, PokemonHandler pokemonViewHandler)
         {
             _db = db;
+            _pokemonViewHandler = pokemonViewHandler;
         }
 
         [Command("view")]
@@ -22,30 +25,35 @@ namespace pokemon_discord_bot.Modules
         public async Task PokemonViewAsync(string? pokemonId = null)
         {
             var user = Context.User;
-            var fileName = "pokemonview.png";
 
-
-            if (pokemonId == null)
+            try
             {
-                Pokemon lastPokemon = await _db.GetLastPokemonCaught(user.Id);
-                var lastPokemonEmbed = new PokemonView(fileName, lastPokemon).GetEmbed();
+                Pokemon pokemon = await _pokemonViewHandler.GetPokemonAsync(user.Id, pokemonId, _db);
 
-                await Context.Channel.SendFileAsync(attachment: await GetPokemonAttachment(fileName, lastPokemon), embed: lastPokemonEmbed);
-                return;
+                var fileName = $"Pokemon{pokemon.FormattedName}{pokemon.IdBase36}.png";
+                var embed = new PokemonView(fileName, pokemon).GetEmbed();
+
+                //By default new pokemons will always have Default frame. (If check below only for older pokemons)
+                string pokemonFramePath = "assets/frames/default_frame";
+
+                if (pokemon.Frame != null) pokemonFramePath = pokemon.Frame.ImgPath;
+
+                var attachment = await GetPokemonAttachment(fileName, pokemonFramePath, pokemon);
+
+                await Context.Channel.SendFileAsync(attachment: attachment, embed: embed);
             }
-
-            Pokemon pokemon = await _db.GetPokemonById(IdHelper.FromBase36(pokemonId));
-            var embed = new PokemonView(fileName, pokemon).GetEmbed();
-
-            await Context.Channel.SendFileAsync(attachment: await GetPokemonAttachment(fileName, pokemon), embed: embed);
+            catch (Exception e)
+            {
+                await Context.Message.ReplyAsync("Invalid pokemon code");
+            }
         }
 
-        private async Task<FileAttachment> GetPokemonAttachment(string fileName, Pokemon pokemon)
+        private async Task<FileAttachment> GetPokemonAttachment(string fileName, string? framePath, Pokemon pokemon)
         {
             var pokemonSize = pokemon.PokemonStats.Size;
             string pokemonSprite = pokemon.GetFrontSprite();
 
-            var stream = await ImageEditor.GenerateEmbedImageAsync(pokemonSprite, pokemon, pokemonScaleFactor: pokemonSize);
+            var stream = await ImageEditor.GeneratePokemonWithFrame(pokemonSprite, framePath, pokemon, pokemonScaleFactor: pokemonSize);
             var fileAttachment = new FileAttachment(stream, fileName);
 
             return fileAttachment;

@@ -25,6 +25,6 @@ namespace pokemon_discord_bot.Data
 
         [Required]
         [Column("img")]
-        public string ImgPath { get; set; } = "";
+        public string ImgPath { get; set; } = null!;
     }
 }

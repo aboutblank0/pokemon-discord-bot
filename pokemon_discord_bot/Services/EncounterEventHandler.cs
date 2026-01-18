@@ -9,8 +9,8 @@ namespace pokemon_discord_bot.Services
         private const uint CLAIM_COOLDOWN_SECONDS = 5;
         private const uint OTHER_USER_CATCHABLE_COOLDOWN = 5;
         private const double SHINY_CHANCE = 1d/10d;
-        private const float MIN_POKEMON_SIZE = 0.5f;
-        private const float MAX_POKEMON_SIZE = 1.5f;
+        private const float MIN_POKEMON_SIZE = 1.0f;
+        private const float MAX_POKEMON_SIZE = 3.0f;
 
         private Dictionary<ulong, DateTimeOffset> _lastTriggerTime;
         private Dictionary<ulong, DateTimeOffset> _lastClaimTime;
@@ -52,7 +52,6 @@ namespace pokemon_discord_bot.Services
                 pokemon.ApiPokemonId = (int) apiPokemon.Id;
                 pokemon.EncounterEvent = encounterEvent;
                 pokemon.IsShiny = random.NextDouble() < SHINY_CHANCE;
-                var values = Enum.GetValues<PokemonGender>();
                 pokemon.Gender = ApiPokemonData.GetRandomPokemonGender(pokemon);
                 pokemon.PokemonStats = new PokemonStats()
                 {

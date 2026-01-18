@@ -152,18 +152,8 @@ public class AppDbContext : DbContext
             .Include(p => p.PokemonStats)
             .Include(p => p.CaughtWithItem)
             .Include(p => p.EncounterEvent)
+            .Include(p => p.Frame)
             .FirstAsync(p => p.PokemonId == pokemonId);
-    }
-
-    public async Task<Pokemon> GetLastPokemonOwned(ulong userId)
-    {
-        return await Pokemon
-            .Include(p => p.PokemonStats)
-            .Include(p => p.CaughtWithItem)
-            .Include(p => p.EncounterEvent)
-            .Where(p => p.OwnedBy == userId)
-            .OrderByDescending(p => p.OwnedAt)
-            .FirstAsync();
     }
 
     public async Task<List<Pokemon>> GetUserPokemonListAsync(ulong userId)
@@ -178,8 +168,8 @@ public class AppDbContext : DbContext
     public async Task<List<PlayerInventory>> GetUserInventoryAsync(ulong userId)
     {
         return await PlayerInventory
-                .Include(ui => ui.Item)
-                .Where(ui => ui.PlayerId == userId)
-                .ToListAsync();
+            .Include(ui => ui.Item)
+            .Where(ui => ui.PlayerId == userId)
+            .ToListAsync();
     }
 }

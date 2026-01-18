@@ -8,21 +8,21 @@ namespace pokemon_discord_bot.DiscordViews
         private string _filename;
         private Pokemon _pokemon;
 
-        public PokemonView(String filename, Pokemon pokemon)
+        public PokemonView(string filename, Pokemon pokemon)
         {
             _filename = filename;
-            this._pokemon = pokemon;
+            _pokemon = pokemon;
         }
 
         public Embed GetEmbed()
         {
             string pokemonStats = new AnsiBuilder()
-                .WithLine($"{_pokemon.PokemonStats.IvHp}", TextColor.Green).WithText(" HP")
-                .WithLine($"{_pokemon.PokemonStats.IvAtk}", TextColor.Yellow).WithText(" ATK")
-                .WithLine($"{_pokemon.PokemonStats.IvDef}", TextColor.Green).WithText(" DEF")
-                .WithLine($"{_pokemon.PokemonStats.IvSpAtk}", TextColor.Green).WithText(" SPATK")
-                .WithLine($"{_pokemon.PokemonStats.IvSpDef}", TextColor.Green).WithText(" SPDEF")
-                .WithLine($"{_pokemon.PokemonStats.IvSpeed}", TextColor.Green).WithText(" SPEED")
+                .WithLine($"{FormatStat(_pokemon.PokemonStats.IvHp)}", TextColor.Green, bold: true).WithText(" HP")
+                .WithLine($"{FormatStat(_pokemon.PokemonStats.IvAtk)}", TextColor.Yellow, bold: true).WithText(" ATK")
+                .WithLine($"{FormatStat(_pokemon.PokemonStats.IvDef)}", TextColor.Green, bold: true).WithText(" DEF")
+                .WithLine($"{FormatStat(_pokemon.PokemonStats.IvSpAtk)}", TextColor.Green, bold: true).WithText(" SPATK")
+                .WithLine($"{FormatStat(_pokemon.PokemonStats.IvSpDef)}", TextColor.Green, bold: true).WithText(" SPDEF")
+                .WithLine($"{FormatStat(_pokemon.PokemonStats.IvSpeed)}", TextColor.Green, bold: true).WithText(" SPEED")
                 .WithBlankSpace()
                 .WithLine("SIZE:").WithText($" {_pokemon.PokemonStats.Size}", TextColor.Green, bold: true)
                 .Build();
@@ -37,6 +37,14 @@ namespace pokemon_discord_bot.DiscordViews
                 .WithImageUrl("attachment://" + _filename)
                 .Build();
             return builder;
+        }
+
+        public string FormatStat(int stat)
+        {
+            if (stat < 10)
+                return $" {stat}";
+
+            return $"{stat}";
         }
     }
 }

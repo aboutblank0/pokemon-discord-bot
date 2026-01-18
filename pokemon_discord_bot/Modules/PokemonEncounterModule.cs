@@ -10,16 +10,17 @@ namespace pokemon_discord_bot.Modules
     [Alias("e", "f", "find", "d", "drop")]
     public class PokemonEncounterModule : ModuleBase<SocketCommandContext>
     {
-
         private readonly InteractionService _interactionService;
         private readonly EncounterEventHandler _encounterEventHandler;
         private readonly AppDbContext _db;
+        private readonly PokemonHandler _pokemonHandler;
 
-        public PokemonEncounterModule(InteractionService interactionService, EncounterEventHandler encounterEventHandler, AppDbContext db)
+        public PokemonEncounterModule(InteractionService interactionService, EncounterEventHandler encounterEventHandler, AppDbContext db, PokemonHandler pokemonHandler)
         {
             _interactionService = interactionService;
             _encounterEventHandler = encounterEventHandler;
             _db = db;
+            _pokemonHandler = pokemonHandler;
         }
 
         [Command("")]
@@ -45,7 +46,7 @@ namespace pokemon_discord_bot.Modules
             var bytes = await ImageEditor.CombineImagesAsync(pokemonSprites, 2.0f);
             var fileName = "coninhas.png";
             var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
-            var encounterView = new EncounterView(_encounterEventHandler, encounter, user, fileName);
+            var encounterView = new EncounterView(_encounterEventHandler, encounter, user, _pokemonHandler, fileName);
             var component = encounterView.GetComponent();
 
             var message = await Context.Channel.SendFileAsync(fileAttachment, components: component);
