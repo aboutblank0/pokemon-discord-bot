@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using pokemon_discord_bot.Data;
+using System.ComponentModel;
+using System.Text.RegularExpressions;
 
 namespace PokemonBot.Data;
 
@@ -72,8 +74,29 @@ public class AppDbContext : DbContext
             {
                 DailyRewardItemId = 1,
                 DailyRewardId = 1,
-                ItemId = 1,
-                Quantity = 5
+                ItemId = 1, // Poke Ball
+                Quantity = 10
+            },
+            new DailyRewardItem
+            {
+                DailyRewardItemId = 2,
+                DailyRewardId = 1,
+                ItemId = 2, // Great Ball
+                Quantity = 10
+            },
+            new DailyRewardItem
+            {
+                DailyRewardItemId = 3,
+                DailyRewardId = 1,
+                ItemId = 3,  // Ultra Ball
+                Quantity = 10
+            },
+            new DailyRewardItem
+            {
+                DailyRewardItemId = 4,
+                DailyRewardId = 1,
+                ItemId = 4,  // Master Ball
+                Quantity = 10
             }
         );
     }
@@ -84,7 +107,7 @@ public class AppDbContext : DbContext
             new Item
             {
                 ItemId = 1,
-                Name = "Pokeball",
+                Name = "Poke Ball",
                 DropChance = 0.1f,
                 Tradeable = true,
                 Attributes = new Dictionary<string, object> { { "CatchRateMultiplier", 1.00f } }
@@ -108,14 +131,6 @@ public class AppDbContext : DbContext
             new Item
             {
                 ItemId = 4,
-                Name = "Love Ball",
-                DropChance = 0.1f,
-                Tradeable = true,
-                Attributes = new Dictionary<string, object> { { "CatchRateMultiplier", 1.00f } }
-            },
-            new Item
-            {
-                ItemId = 5,
                 Name = "Master Ball",
                 DropChance = 0.1f,
                 Tradeable = true,
