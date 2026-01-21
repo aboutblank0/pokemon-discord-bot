@@ -46,21 +46,22 @@ namespace pokemon_discord_bot.Modules
             var bytes = await ImageEditor.CombineImagesAsync(pokemonSprites, 2.0f);
             var fileName = "coninhas.png";
             var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
-            var encounterView = new EncounterView(_encounterEventHandler, encounter, user, _pokemonHandler, fileName);
+            var encounterView = new EncounterView(_encounterEventHandler, encounter, user, _pokemonHandler, _interactionService, fileName);
             var component = encounterView.GetComponent();
 
             var message = await Context.Channel.SendFileAsync(fileAttachment, components: component);
+            encounterView.SetMessage(message);
 
             _interactionService.RegisterView(message.Id, encounterView);
 
-            await Task.Delay(TimeSpan.FromMinutes(1));
-
-            await message.ModifyAsync(msg =>
+            DiscordViewHelper.StartInactivityTimer(async () =>
             {
-                msg.Components = encounterView.GetExpiredContent();
+                await message.ModifyAsync(msg =>
+                {
+                    msg.Components = encounterView.GetExpiredContent();
+                });
+                _interactionService.UnregisterView(message.Id);
             });
-
-            _interactionService.UnregisterView(message.Id);
         }
     }
 }

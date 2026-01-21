@@ -33,8 +33,14 @@ namespace pokemon_discord_bot.DiscordViews
 
             foreach (PlayerInventory playerInventory in _playerInventory.Take(range))
             {
+                string emoteString = DiscordViewHelper.PokeballEmotes.GetValueOrDefault(playerInventory.Item.Name, "");
+
+                Emote? emote = null;
+                if (emoteString != null && Emote.TryParse(emoteString, out var parsedEmote))
+                    emote = parsedEmote;
+
                 string name = playerInventory.Item.Name;
-                stringBuilder.AppendLine($"**{name}** - `{playerInventory.Quantity}`");
+                stringBuilder.AppendLine($"{emote} **{name}** - `{playerInventory.Quantity}`");
             }
 
             return new EmbedBuilder()
