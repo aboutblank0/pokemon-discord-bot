@@ -169,6 +169,7 @@ namespace pokemon_discord_bot.DiscordViews
 
             var allPokeballs = await db.Items
                 .Where(i => Regex.IsMatch(i.Name, "Ball"))
+                .OrderBy(i => i.ItemId)
                 .ToListAsync();
 
             var allUserPokeballs = await db.PlayerInventory

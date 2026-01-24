@@ -22,10 +22,14 @@ namespace pokemon_discord_bot.DiscordViews
         const float CATCH_PROBABILITY_LEGENDARY = 0.1f;
         const float CATCH_PROBABILITY_MYTHICAL = 0.075f;
 
-        private float fleeProbabilityNormal = 0.20f;
-        private float fleeProbabilityLegendary = 0.10f;
-        private float fleeProbabilityMythical = 0.08f;
-        private float fleeRate = 1.15f;
+        private float _fleeProbability = 0;
+        private float _fleeProbabilityNormal = 0.20f;
+        private float _fleeProbabilityLegendary = 0.10f;
+        private float _fleeProbabilityMythical = 0.08f;
+        private float _fleeRate = 1.15f;
+        private float _catchTries = 0;
+        private bool _isPokemonLegendary;
+        private bool _isPokemonMythical;
 
         public CatchView(Pokemon pokemon, SocketUser user, PokemonService pokemonHandler, EncounterView encounterView)
         {
@@ -33,6 +37,9 @@ namespace pokemon_discord_bot.DiscordViews
             _user = user;
             _pokemonHandler = pokemonHandler;
             _encounterView = encounterView;
+
+            _isPokemonLegendary = _pokemon.ApiPokemon.Weight == 10;
+            _isPokemonMythical = _pokemon.ApiPokemon.Weight == 5;
         }
 
         public async Task<(MessageComponent components, FileAttachment attachment)> GetComponent(List<PlayerInventory> userPokeballs, List<Item> allPokeballsSorted)
@@ -89,33 +96,36 @@ namespace pokemon_discord_bot.DiscordViews
             float pokeballCatchRateMultiplier = (float) element.GetDouble();
             float catchRate;
 
-            if (_pokemon.ApiPokemon.Weight == 5)
+            if (_isPokemonMythical)
                 catchRate = pokeballCatchRateMultiplier * CATCH_PROBABILITY_MYTHICAL;
-            else if (_pokemon.ApiPokemon.Weight == 10)
+            else if (_isPokemonLegendary)
                 catchRate = pokeballCatchRateMultiplier * CATCH_PROBABILITY_LEGENDARY;
             else
                 catchRate = pokeballCatchRateMultiplier * CATCH_PROBABILITY_NORMAL;
 
-            return random.NextDouble() < 0.01;
+            return random.NextDouble() < catchRate;
         }
 
         private bool PokemonFled()
         {
-            var random = Random.Shared;
-            float fleeProbability;
+            var random = Random.Shared.NextDouble();
 
-            if (_pokemon.ApiPokemon.Weight == 5)
+            if (_isPokemonMythical)
             {
-                fleeProbability = fleeProbabilityMythical;
-                fleeProbability *= fleeRate;
+                _fleeProbability = MathF.Pow(_fleeRate, _catchTries) * _fleeProbabilityMythical;
             }
-                
-            else if (_pokemon.ApiPokemon.Weight == 10)
-                fleeProbability = fleeRate * fleeProbabilityLegendary;
+            else if (_isPokemonLegendary)
+            {
+                _fleeProbability = MathF.Pow(_fleeRate, _catchTries) * _fleeProbabilityLegendary;
+            }
             else
-                fleeProbability = fleeRate * fleeProbabilityNormal;
+            {
+                _fleeProbability = MathF.Pow(_fleeRate, _catchTries) * _fleeProbabilityNormal;
+            }
 
-            return random.NextDouble() < fleeProbability;
+            _catchTries++;
+
+            return random < _fleeProbability;
         }
 
         public async Task HandleInteraction(SocketMessageComponent component, IServiceProvider serviceProvider)
@@ -138,7 +148,7 @@ namespace pokemon_discord_bot.DiscordViews
             string pokeballName = component.Data.CustomId.Substring(0, position);
 
             var userPokeball = currentUserPokeballs.FirstOrDefault(ui => ui.Item.Name == pokeballName);
-            userPokeball.Quantity -= 10;
+            userPokeball.Quantity -= 1;
 
             if (userPokeball.Quantity <= 0)
             {
@@ -159,18 +169,13 @@ namespace pokemon_discord_bot.DiscordViews
                 //Cache last pokemon caught by user who interacted with this component
                 _pokemonHandler.SetLastPokemonOwned(component.User.Id, _pokemon);
 
-                db.Pokemon.Update(_pokemon);
-
+                db.Pokemon.Attach(_pokemon);
                 _pokemon.CaughtBy = component.User.Id;
                 _pokemon.OwnedBy = component.User.Id;
-
+                
                 await db.SaveChangesAsync();
-
-                await component.Channel.SendMessageAsync($"{component.User.Mention} caught {_pokemon.FormattedName} `{_pokemon.IdBase36}` - IV: `{_pokemon.PokemonStats.TotalIvPercent}%` with a {pokeballName}!");
-
-                //update EncounterView Component
                 await _encounterView.UpdateMessageAsync();
-
+                await component.Channel.SendMessageAsync($"{component.User.Mention} caught {_pokemon.FormattedName} `{_pokemon.IdBase36}` - IV: `{_pokemon.PokemonStats.TotalIvPercent}%` with a {pokeballName}!");
                 await component.DeleteOriginalResponseAsync();
                 
                 return;
@@ -183,9 +188,9 @@ namespace pokemon_discord_bot.DiscordViews
                     _encounterView.RemoveCatchingUser(component.User.Id);
 
                     await component.Channel.SendMessageAsync($"{component.User.Mention} The {_pokemon.FormattedName} fled!");
-                    //update EncounterView Component
                     await _encounterView.UpdateMessageAsync();
                     await component.DeleteOriginalResponseAsync();
+
                     return;
                 }
 
