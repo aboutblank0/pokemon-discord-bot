@@ -12,14 +12,14 @@ namespace pokemon_discord_bot.Modules
     public class PokemonEncounterModule : ModuleBase<SocketCommandContext>
     {
         private readonly InteractionService _interactionService;
-        private readonly EncounterEventService _encounterEventHandler;
+        private readonly EncounterEventService _encounterEventService;
         private readonly AppDbContext _db;
         private readonly PokemonService _pokemonHandler;
 
         public PokemonEncounterModule(InteractionService interactionService, EncounterEventService encounterEventHandler, AppDbContext db, PokemonService pokemonHandler)
         {
             _interactionService = interactionService;
-            _encounterEventHandler = encounterEventHandler;
+            _encounterEventService = encounterEventHandler;
             _db = db;
             _pokemonHandler = pokemonHandler;
         }
@@ -27,15 +27,17 @@ namespace pokemon_discord_bot.Modules
         [Command("")]
         public async Task DropAsync()
         {
+            Context.Channel.
+
             var user = Context.User;
 
-            if (!_encounterEventHandler.CanUserTriggerEncounter(user.Id))
+            if (!_encounterEventService.CanUserTriggerEncounter(user.Id))
             {
                 await Context.Channel.SendMessageAsync($"{user.Mention} ACALMA-TE CARALHO");
                 return;
             }
             
-            var encounter = await _encounterEventHandler.CreateRandomEncounterEvent(3, user.Id, _db);
+            var encounter = await _encounterEventService.CreateRandomEncounterEvent(3, user.Id, _db);
             List<string> pokemonSprites = new List<string>();
 
             foreach (var pokemon in encounter.Pokemons)
@@ -47,7 +49,7 @@ namespace pokemon_discord_bot.Modules
             var bytes = await ImageEditor.CombineImagesAsync(pokemonSprites, 2.0f);
             var fileName = "coninhas.png";
             var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
-            var encounterView = new EncounterView(_encounterEventHandler, encounter, user, _pokemonHandler, _interactionService, fileName);
+            var encounterView = new EncounterView(_encounterEventService, encounter, user, _pokemonHandler, _interactionService, fileName);
             var component = encounterView.GetComponent();
 
             var message = await Context.Channel.SendFileAsync(fileAttachment, components: component);

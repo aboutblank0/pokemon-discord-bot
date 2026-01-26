@@ -45,7 +45,8 @@ namespace pokemon_discord_bot.DiscordViews
         public async Task<(MessageComponent components, FileAttachment attachment)> GetComponent(List<PlayerInventory> userPokeballs, List<Item> allPokeballsSorted)
         {
             var fileName = $"catching_{IdHelper.ToBase36(_pokemon.PokemonId)}.png";
-            var pokemonView = await ImageEditor.GeneratePokemonWithFrame(_pokemon.GetFrontSprite(), null, _pokemon, 1.0f);
+
+            var pokemonView = await ImageEditor.GenerateCatchingPokemon(_pokemon.GetFrontSprite(), _pokemon);
             var fileAttachment = new FileAttachment(pokemonView, fileName);
 
             var userPokeballsQuantity = userPokeballs.ToDictionary(pi => pi.Item.ItemId, pi => pi.Quantity);

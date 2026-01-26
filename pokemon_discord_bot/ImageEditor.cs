@@ -114,22 +114,6 @@ namespace pokemon_discord_bot
             }
         }
 
-        public static async Task<byte[]> GetUrlImageBytesAsync(string imageUrl, float scaleFactor = 1.0f)
-        {
-            if (string.IsNullOrEmpty(imageUrl))
-                return Array.Empty<byte>();
-
-            Image<Rgba32> bitmap = await SingleImageBitmapAsync(imageUrl, scaleFactor);
-
-            if (bitmap == null) return Array.Empty<byte>();
-
-            await using var outputStream = new MemoryStream();
-            var imageEncoder = bitmap.Configuration.ImageFormatsManager.GetEncoder(PngFormat.Instance);
-
-            bitmap.Save(outputStream, imageEncoder);
-            return outputStream.ToArray();
-        }
-
         public static async Task<Stream> GeneratePokemonWithFrame(string spriteUrl, string? framePath, Pokemon pokemon, float pokemonScaleFactor = 1.0f)
         {
             int resizedSprite = (int)(100 * pokemonScaleFactor);
@@ -179,5 +163,48 @@ namespace pokemon_discord_bot
             stream.Position = 0;
             return stream;
         }
+
+        public static async Task<Stream> GenerateCatchingPokemon(string spriteUrl, Pokemon pokemon)
+        {
+            int embedImageWidth = 300;
+            int embedImageHeight = 300;
+
+            int resizedSprite = 250;
+
+            // Create blank image with transparent background
+            using Image image = new Image<Rgba32>(embedImageWidth, embedImageHeight, Color.Transparent);
+
+            // Download, mutate and draw sprite
+            if (!string.IsNullOrEmpty(spriteUrl))
+            {
+                using var httpClient = new HttpClient();
+
+                var spriteBytes = await httpClient.GetByteArrayAsync(spriteUrl);
+                using var spriteImage = Image.Load(spriteBytes);
+
+                // Resize sprite
+                spriteImage.Mutate(ctx =>
+                {
+                    ctx.Resize(new ResizeOptions
+                    {
+                        Size = new Size(resizedSprite, resizedSprite),
+                        Sampler = KnownResamplers.NearestNeighbor
+                    });
+                });
+
+                //Center sprite in pokemon box
+                int spriteX = (embedImageWidth - resizedSprite) / 2;
+                int spriteY = (embedImageHeight - resizedSprite) / 2;
+
+                image.Mutate(ctx => ctx.DrawImage(spriteImage, new Point(spriteX, spriteY), 1f));
+            }
+
+            // Save to stream (PNG format)
+            var stream = new MemoryStream();
+            await image.SaveAsPngAsync(stream);
+            stream.Position = 0;
+            return stream;
+        }
+
     }
 }
