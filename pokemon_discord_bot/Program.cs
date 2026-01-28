@@ -28,6 +28,9 @@ namespace pokemon_discord_bot
             services.AddSingleton<InteractionService>();
             services.AddSingleton<DailyRewardService>();
             services.AddSingleton<PokemonService>();
+            services.AddSingleton<ItemService>();
+
+            services.AddMemoryCache();
 
             // Build the data source once
             var connectionUrl = Environment.GetEnvironmentVariable("POKEMON_DISCORD_BOT_DB_URL");

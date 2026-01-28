@@ -1,13 +1,13 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using pokemon_discord_bot.Data;
 using pokemon_discord_bot.Example;
 using pokemon_discord_bot.Helpers;
 using pokemon_discord_bot.Services;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace pokemon_discord_bot.DiscordViews
 {
@@ -15,8 +15,9 @@ namespace pokemon_discord_bot.DiscordViews
     {
         private readonly Pokemon _pokemon;
         private readonly SocketUser _user;
-        private readonly PokemonService _pokemonHandler;
+        private readonly PokemonService _pokemonService;
         private readonly EncounterView _encounterView;
+        private readonly ItemService _itemService;
 
         const float CATCH_PROBABILITY_NORMAL = 0.50f;
         const float CATCH_PROBABILITY_LEGENDARY = 0.1f;
@@ -31,12 +32,13 @@ namespace pokemon_discord_bot.DiscordViews
         private bool _isPokemonLegendary;
         private bool _isPokemonMythical;
 
-        public CatchView(Pokemon pokemon, SocketUser user, PokemonService pokemonHandler, EncounterView encounterView)
+        public CatchView(Pokemon pokemon, SocketUser user, PokemonService pokemonService, EncounterView encounterView, ItemService itemService)
         {
             _pokemon = pokemon;
             _user = user;
-            _pokemonHandler = pokemonHandler;
+            _pokemonService = pokemonService;
             _encounterView = encounterView;
+            _itemService = itemService;
 
             _isPokemonLegendary = _pokemon.ApiPokemon.Weight == 10;
             _isPokemonMythical = _pokemon.ApiPokemon.Weight == 5;
@@ -112,17 +114,11 @@ namespace pokemon_discord_bot.DiscordViews
             var random = Random.Shared.NextDouble();
 
             if (_isPokemonMythical)
-            {
                 _fleeProbability = MathF.Pow(_fleeRate, _catchTries) * _fleeProbabilityMythical;
-            }
             else if (_isPokemonLegendary)
-            {
                 _fleeProbability = MathF.Pow(_fleeRate, _catchTries) * _fleeProbabilityLegendary;
-            }
             else
-            {
                 _fleeProbability = MathF.Pow(_fleeRate, _catchTries) * _fleeProbabilityNormal;
-            }
 
             _catchTries++;
 
@@ -134,15 +130,12 @@ namespace pokemon_discord_bot.DiscordViews
             await component.DeferAsync(ephemeral: true);
 
             var db = serviceProvider.GetRequiredService<AppDbContext>();
-
-            var allPokeballs = await db.Items
-                .Where(i => Regex.IsMatch(i.Name, "Ball"))
-                .OrderBy(i => i.ItemId)
-                .ToListAsync();
+            var cache = serviceProvider.GetRequiredService<IMemoryCache>();
+            var allPokeballsSorted = await _itemService.GetAllPokeballsSortedCache(db, cache);
 
             var currentUserPokeballs = await db.PlayerInventory
                 .Include(ui => ui.Item)
-                .Where(ui => ui.PlayerId == component.User.Id && Regex.IsMatch(ui.Item.Name, "Ball"))
+                .Where(ui => ui.PlayerId == component.User.Id && EF.Functions.ILike(ui.Item.Name, "Ball"))
                 .ToListAsync();
 
             int position = component.Data.CustomId.IndexOf("catch-");
@@ -165,10 +158,10 @@ namespace pokemon_discord_bot.DiscordViews
             {
                 //Add pokemon to EncounterView CaughtPokemons List for button check
                 _encounterView.AddCaughtPokemon(_pokemon);
-                _encounterView.RemoveCatchingUser(component.User.Id);
+                _encounterView.RemoveUserCatchingPokemon(component.User.Id);
 
                 //Cache last pokemon caught by user who interacted with this component
-                _pokemonHandler.SetLastPokemonOwned(component.User.Id, _pokemon);
+                _pokemonService.SetLastPokemonOwned(component.User.Id, _pokemon);
 
                 db.Pokemon.Attach(_pokemon);
                 _pokemon.CaughtBy = component.User.Id;
@@ -186,7 +179,7 @@ namespace pokemon_discord_bot.DiscordViews
                 if (PokemonFled())
                 {
                     _encounterView.AddFledPokemon(_pokemon);
-                    _encounterView.RemoveCatchingUser(component.User.Id);
+                    _encounterView.RemoveUserCatchingPokemon(component.User.Id);
 
                     await component.Channel.SendMessageAsync($"{component.User.Mention} The {_pokemon.FormattedName} fled!");
                     await _encounterView.UpdateMessageAsync();
@@ -197,7 +190,7 @@ namespace pokemon_discord_bot.DiscordViews
 
                 if (currentUserPokeballs.Count <= 0)
                 {
-                    _encounterView.RemoveCatchingUser(component.User.Id);
+                    _encounterView.RemoveUserCatchingPokemon(component.User.Id);
 
                     await component.FollowupAsync("No pokeballs left!", ephemeral: true);
                     await _encounterView.UpdateMessageAsync();
@@ -206,7 +199,7 @@ namespace pokemon_discord_bot.DiscordViews
                     return;
                 }
 
-                var updatedComponents = await GetComponent(currentUserPokeballs, allPokeballs);
+                var updatedComponents = await GetComponent(currentUserPokeballs, allPokeballsSorted);
 
                 await component.ModifyOriginalResponseAsync(msg =>
                 {

@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
 using pokemon_discord_bot.DiscordViews;
-using pokemon_discord_bot.Helpers;
 using pokemon_discord_bot.Services;
 using pokemon_discord_bot.Data;
 
@@ -14,21 +13,21 @@ namespace pokemon_discord_bot.Modules
         private readonly InteractionService _interactionService;
         private readonly EncounterEventService _encounterEventService;
         private readonly AppDbContext _db;
-        private readonly PokemonService _pokemonHandler;
+        private readonly PokemonService _pokemonService;
+        private readonly ItemService _itemService;
 
-        public PokemonEncounterModule(InteractionService interactionService, EncounterEventService encounterEventHandler, AppDbContext db, PokemonService pokemonHandler)
+        public PokemonEncounterModule(InteractionService interactionService, EncounterEventService encounterEventHandler, AppDbContext db, PokemonService pokemonService, ItemService itemService)
         {
             _interactionService = interactionService;
             _encounterEventService = encounterEventHandler;
             _db = db;
-            _pokemonHandler = pokemonHandler;
+            _pokemonService = pokemonService;
+            _itemService = itemService;
         }
 
         [Command("")]
         public async Task DropAsync()
         {
-            Context.Channel.
-
             var user = Context.User;
 
             if (!_encounterEventService.CanUserTriggerEncounter(user.Id))
@@ -49,7 +48,7 @@ namespace pokemon_discord_bot.Modules
             var bytes = await ImageEditor.CombineImagesAsync(pokemonSprites, 2.0f);
             var fileName = "coninhas.png";
             var fileAttachment = new FileAttachment(new MemoryStream(bytes), fileName);
-            var encounterView = new EncounterView(_encounterEventService, encounter, user, _pokemonHandler, _interactionService, fileName);
+            var encounterView = new EncounterView(_encounterEventService, encounter, user, _pokemonService, _interactionService, _itemService, fileName);
             var component = encounterView.GetComponent();
 
             var message = await Context.Channel.SendFileAsync(fileAttachment, components: component);
