@@ -15,19 +15,34 @@ namespace pokemon_discord_bot.Modules
         private readonly AppDbContext _db;
         private readonly PokemonService _pokemonService;
         private readonly ItemService _itemService;
+        private readonly ServerConfigService _serverSettings;
 
-        public PokemonEncounterModule(InteractionService interactionService, EncounterEventService encounterEventHandler, AppDbContext db, PokemonService pokemonService, ItemService itemService)
+        public PokemonEncounterModule(InteractionService interactionService, EncounterEventService encounterEventHandler, AppDbContext db, PokemonService pokemonService, ItemService itemService, ServerConfigService setupService)
         {
             _interactionService = interactionService;
             _encounterEventService = encounterEventHandler;
             _db = db;
             _pokemonService = pokemonService;
             _itemService = itemService;
+            _serverSettings = setupService;
         }
 
         [Command("")]
         public async Task DropAsync()
         {
+            ulong primaryChannel = _serverSettings.GetPrimaryChannel(Context.Guild.Id);
+
+            if (primaryChannel == 0)
+            {
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention}, use p!set in a channel to be able to use the `encounter` command");
+                return;
+            } 
+            else if (Context.Channel.Id != primaryChannel)
+            {
+                await Context.Channel.SendMessageAsync($"{Context.User.Mention}, `encounter` command is only available on channel <#{primaryChannel}>");
+                return;
+            }
+
             var user = Context.User;
 
             if (!_encounterEventService.CanUserTriggerEncounter(user.Id))

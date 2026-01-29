@@ -29,6 +29,7 @@ namespace pokemon_discord_bot
             services.AddSingleton<DailyRewardService>();
             services.AddSingleton<PokemonService>();
             services.AddSingleton<ItemService>();
+            services.AddSingleton<ServerConfigService>();
 
             services.AddMemoryCache();
 

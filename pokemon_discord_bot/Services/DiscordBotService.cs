@@ -14,6 +14,7 @@ namespace pokemon_discord_bot.Services
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly CommandHandler _commandHandler;
+        private readonly ServerConfigService _serverSettings;
 
         private readonly string? _token = Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN");
 
@@ -23,6 +24,7 @@ namespace pokemon_discord_bot.Services
             _client = provider.GetRequiredService<DiscordSocketClient>();
             _commands = provider.GetRequiredService<CommandService>();
             _commandHandler = provider.GetRequiredService<CommandHandler>();
+            _serverSettings = provider.GetRequiredService<ServerConfigService>();
         }
 
         public async Task StartAsync()
@@ -40,6 +42,8 @@ namespace pokemon_discord_bot.Services
             // Logging
             _client.Log += Log;
             _client.Ready += OnReady;
+
+            _client.JoinedGuild += OnGuildJoinedAsync;
 
             // Install commands and hook message handler
             await _commandHandler.InstallCommandsAsync();
@@ -59,6 +63,20 @@ namespace pokemon_discord_bot.Services
         {
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
+        }
+
+        private async Task OnGuildJoinedAsync(SocketGuild guild)
+        {
+            ulong defaultChannelId = guild.SystemChannel != null ? guild.SystemChannel.Id : guild.TextChannels.FirstOrDefault(c => c is SocketTextChannel && c.GetType() == typeof(SocketTextChannel))?.Id ?? 0;
+
+            await _serverSettings.SetPrimaryChannelAsync(guild.Id, defaultChannelId);
+
+            var channel = guild.GetTextChannel(defaultChannelId);
+
+            if (channel != null)
+                await channel.SendMessageAsync("Beep Boop, this channel is set for the Pokemon encounters. Type p!set on another channel to change it");
+            else
+                Console.WriteLine($"Joined guild {guild.Name} but no text channels found.");
         }
     }
 }

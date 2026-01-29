@@ -13,14 +13,16 @@ namespace pokemon_discord_bot.Handlers
         private readonly CommandService _commands;
         private readonly IServiceProvider _provider;
         private readonly InteractionService _interactionService;
+        private readonly ServerConfigService _serverSettings;
 
         // Retrieve client and CommandService instance via ctor
-        public CommandHandler(DiscordSocketClient client, CommandService commands, IServiceProvider provider, InteractionService interactionService)
+        public CommandHandler(DiscordSocketClient client, CommandService commands, IServiceProvider provider, InteractionService interactionService, ServerConfigService serversettings)
         {
             _provider = provider;
             _commands = commands;
             _client = client;
             _interactionService = interactionService;
+            _serverSettings = serversettings;
         }
 
         public async Task InstallCommandsAsync()
@@ -49,15 +51,16 @@ namespace pokemon_discord_bot.Handlers
             int argPos = 0;
 
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-            bool hasPrefix = message.HasCharPrefix('p', ref argPos) ||
-                            message.HasCharPrefix('P', ref argPos);
+            var context = new SocketCommandContext(_client, message);
+            string prefix = _serverSettings.GetServerPrefix(context.Guild.Id);
+
+            bool hasPrefix = message.HasStringPrefix(prefix, ref argPos, StringComparison.OrdinalIgnoreCase);
 
             if (!(hasPrefix ||
                 message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
                 message.Author.IsBot)
                 return;
 
-            var context = new SocketCommandContext(_client, message);
             _ = Task.Run(async () =>
             {
                 using var scope = _provider.CreateScope();
@@ -67,7 +70,7 @@ namespace pokemon_discord_bot.Handlers
                     services: scope.ServiceProvider);
             });
         }
-        
+
         private async Task HandleInteractionAsync(SocketInteraction interaction)
         {
             using var scope = _provider.CreateScope();
